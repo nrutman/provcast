@@ -7,6 +7,7 @@ target/
 
 # Tauri
 api/target/
+api/gen/
 
 # IDE
 .vscode/
@@ -25,6 +26,7 @@ Thumbs.db
 
 # Generated
 app/routeTree.gen.ts
+.tanstack/
 *.tsbuildinfo
 
 # Logs
