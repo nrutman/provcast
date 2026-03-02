@@ -1,0 +1,43 @@
+{
+  "name": "prodcast",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "tauri": "TAURI_DIR=api tauri",
+    "test": "vitest run"
+  },
+  "packageManager": "pnpm@10.30.3",
+  "dependencies": {
+    "@radix-ui/react-slot": "^1.2.4",
+    "@tanstack/react-router": "^1.163.3",
+    "@tanstack/router-plugin": "^1.164.0",
+    "@tauri-apps/plugin-dialog": "^2.6.0",
+    "@tauri-apps/plugin-fs": "^2.4.5",
+    "@wavesurfer/react": "^1.0.12",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.575.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-material-symbols": "^4.4.0",
+    "tailwind-merge": "^3.5.0",
+    "wavesurfer.js": "^7.12.1",
+    "zundo": "^2.3.0",
+    "zustand": "^5.0.11"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.2.1",
+    "@tauri-apps/api": "^2.10.1",
+    "@tauri-apps/cli": "^2.10.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.4",
+    "tailwindcss": "^4.2.1",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1"
+  }
+}
