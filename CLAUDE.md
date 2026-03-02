@@ -1,7 +1,7 @@
-# Prodcast — Project Conventions
+# Provcast — Project Conventions
 
 ## Overview
-Prodcast is a desktop audio editor for podcast publishing, built with Tauri v2 (Rust backend) + React (TypeScript frontend).
+Provcast is a desktop audio editor for podcast publishing, built with Tauri v2 (Rust backend) + React (TypeScript frontend).
 
 ## Architecture
 - **All audio processing happens in Rust** — the React frontend handles visualization and UI only

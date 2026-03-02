@@ -56,7 +56,7 @@ export function Toolbar() {
   return (
     <div className="flex h-12 items-center gap-1 border-b border-border bg-card px-3">
       <div className="flex items-center gap-1">
-        <span className="mr-2 text-sm font-bold text-primary">Prodcast</span>
+        <span className="mr-2 text-sm font-bold text-primary">Provcast</span>
         <Button variant="ghost" size="sm" onClick={handleOpen} title="Open file (Ctrl+O)">
           <FolderOpen className="h-4 w-4" />
         </Button>

@@ -1,4 +1,8 @@
-# Prodcast
+<p align="center">
+  <img src="__docs__/icon.png" width="128" height="128" alt="Provcast icon">
+</p>
+
+# Provcast
 
 A desktop application for preparing audio files for podcast publishing.
 
@@ -37,6 +41,15 @@ pnpm tauri dev
 ```bash
 pnpm tauri build
 ```
+
+## Branding
+
+| Color | RGB | Hex | Usage |
+|---|---|---|---|
+| Navy | `rgb(14, 41, 69)` | `#0E2945` | Background |
+| Blue | `rgb(0, 165, 226)` | `#00A5E2` | Foreground / Accent |
+
+![](__docs__/palette.png)
 
 ## Keyboard Shortcuts
 

@@ -1,5 +1,5 @@
 [package]
-name = "prodcast"
+name = "provcast"
 version = "0.1.0"
 edition = "2021"
 
@@ -29,9 +29,9 @@ cocoa = "0.26"
 objc = "0.2"
 
 [[bin]]
-name = "Prodcast"
+name = "Provcast"
 path = "src/main.rs"
 
 [lib]
-name = "prodcast_lib"
+name = "provcast_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
