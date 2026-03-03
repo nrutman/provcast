@@ -438,4 +438,121 @@ mod tests {
         let region = find_quietest_region(&[], 1, 44100, 0.5);
         assert!(region.is_none());
     }
+
+    // ── Compression tests ───────────────────────────────────────────────────
+
+    #[test]
+    fn test_compress_reduces_dynamic_range() {
+        let sample_rate = 44100u32;
+        // A loud sine wave with amplitude 0.5 (peak ~0.5)
+        let samples = sine_wave(440.0, 0.5, sample_rate);
+
+        let params = CompressionParams {
+            threshold_db: -12.0,
+            ratio: 4.0,
+            attack_ms: 5.0,
+            release_ms: 50.0,
+            makeup_gain_db: 0.0, // No makeup gain
+        };
+
+        let compressed = compress(&samples, 1, sample_rate, &params);
+        assert_eq!(compressed.len(), samples.len());
+
+        // The peak of the compressed signal should be lower than the original.
+        let original_peak = samples.iter().map(|s| s.abs()).fold(0.0f32, f32::max);
+        let compressed_peak = compressed.iter().map(|s| s.abs()).fold(0.0f32, f32::max);
+        assert!(
+            compressed_peak < original_peak,
+            "compressed peak ({}) should be less than original peak ({})",
+            compressed_peak,
+            original_peak
+        );
+    }
+
+    #[test]
+    fn test_compress_with_makeup_gain() {
+        let sample_rate = 44100u32;
+        let samples = sine_wave(440.0, 0.5, sample_rate);
+
+        let params = CompressionParams {
+            threshold_db: -12.0,
+            ratio: 4.0,
+            attack_ms: 5.0,
+            release_ms: 50.0,
+            makeup_gain_db: 6.0,
+        };
+
+        let compressed = compress(&samples, 1, sample_rate, &params);
+        assert_eq!(compressed.len(), samples.len());
+
+        // Output should not be all zeros.
+        let has_nonzero = compressed.iter().any(|&s| s.abs() > 1e-6);
+        assert!(
+            has_nonzero,
+            "compressed output with makeup gain should not be all zeros"
+        );
+    }
+
+    #[test]
+    fn test_compress_empty_input() {
+        let params = CompressionParams {
+            threshold_db: -20.0,
+            ratio: 4.0,
+            attack_ms: 5.0,
+            release_ms: 50.0,
+            makeup_gain_db: 0.0,
+        };
+        let result = compress(&[], 1, 44100, &params);
+        assert!(result.is_empty());
+    }
+
+    // ── Silence detection tests ─────────────────────────────────────────────
+
+    #[test]
+    fn test_detect_silence_finds_gaps() {
+        let sample_rate = 44100u32;
+        let mut samples = Vec::new();
+
+        // 0-1s: loud sine
+        samples.extend(sine_wave(440.0, 1.0, sample_rate));
+        // 1-2s: silence
+        samples.extend(vec![0.0f32; sample_rate as usize]);
+        // 2-3s: loud sine again
+        samples.extend(sine_wave(440.0, 1.0, sample_rate));
+
+        let regions = detect_silence(&samples, 1, sample_rate, -40.0, 0.5);
+        assert!(
+            !regions.is_empty(),
+            "should detect at least one silence region"
+        );
+
+        // The detected region should overlap with the 1-2s gap.
+        let r = &regions[0];
+        assert!(
+            r.start < 2.0 && r.end > 1.0,
+            "silence region ({}-{}) should overlap with 1-2s gap",
+            r.start,
+            r.end
+        );
+    }
+
+    #[test]
+    fn test_detect_silence_no_gaps() {
+        let sample_rate = 44100u32;
+        // 2 seconds of loud sine — no silence
+        let samples = sine_wave(440.0, 2.0, sample_rate);
+
+        let regions = detect_silence(&samples, 1, sample_rate, -40.0, 0.5);
+        assert!(
+            regions.is_empty(),
+            "should not detect silence in an all-loud signal, found {} regions",
+            regions.len()
+        );
+    }
+
+    #[test]
+    fn test_detect_silence_empty() {
+        let regions = detect_silence(&[], 1, 44100, -40.0, 0.5);
+        assert!(regions.is_empty());
+    }
 }

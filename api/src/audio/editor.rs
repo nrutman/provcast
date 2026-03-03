@@ -181,3 +181,187 @@ fn apply_single_op(samples: &[f32], op: &EditOp, channels: usize, sample_rate: u
         }
     }
 }
+
+// ── Tests ───────────────────────────────────────────────────────────────────
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Helper: create a simple interleaved sample buffer of `n` frames for
+    /// `channels` channels where each sample value equals its frame index
+    /// (cast to f32).
+    fn ramp_samples(frames: usize, channels: u16) -> Vec<f32> {
+        let ch = channels as usize;
+        let mut out = Vec::with_capacity(frames * ch);
+        for f in 0..frames {
+            for _ in 0..ch {
+                out.push(f as f32);
+            }
+        }
+        out
+    }
+
+    // ── EDL lifecycle tests ─────────────────────────────────────────────
+
+    #[test]
+    fn test_edl_new_is_empty() {
+        let edl = EditDecisionList::new();
+        let source: Vec<f32> = vec![1.0, 2.0, 3.0, 4.0];
+        // Applying an empty EDL should return the source unchanged.
+        let result = edl.apply_edits(&source, 1, 44100);
+        assert_eq!(result, source);
+    }
+
+    #[test]
+    fn test_edl_add_edit() {
+        let mut edl = EditDecisionList::new();
+        edl.add_edit(EditOp::Silence {
+            start: 0.0,
+            end: 1.0,
+        });
+
+        // 4 frames of mono audio => 1 second at sr=4
+        let sample_rate = 4u32;
+        let source = vec![1.0f32, 2.0, 3.0, 4.0];
+        let result = edl.apply_edits(&source, 1, sample_rate);
+
+        // All samples should be zeroed (silence from 0-1s covers everything).
+        assert_eq!(result, vec![0.0, 0.0, 0.0, 0.0]);
+    }
+
+    #[test]
+    fn test_edl_undo() {
+        let mut edl = EditDecisionList::new();
+        edl.add_edit(EditOp::Silence {
+            start: 0.0,
+            end: 1.0,
+        });
+        let undone = edl.undo();
+        assert!(undone.is_some());
+
+        // After undo, applying edits should return original.
+        let source = vec![1.0f32, 2.0, 3.0, 4.0];
+        let result = edl.apply_edits(&source, 1, 4);
+        assert_eq!(result, source);
+    }
+
+    #[test]
+    fn test_edl_redo() {
+        let mut edl = EditDecisionList::new();
+        edl.add_edit(EditOp::Silence {
+            start: 0.0,
+            end: 1.0,
+        });
+        edl.undo();
+        let redone = edl.redo();
+        assert!(redone.is_some());
+
+        // After redo, the silence should be re-applied.
+        let source = vec![1.0f32, 2.0, 3.0, 4.0];
+        let result = edl.apply_edits(&source, 1, 4);
+        assert_eq!(result, vec![0.0, 0.0, 0.0, 0.0]);
+    }
+
+    #[test]
+    fn test_edl_undo_clears_on_new_edit() {
+        let mut edl = EditDecisionList::new();
+        edl.add_edit(EditOp::Silence {
+            start: 0.0,
+            end: 0.5,
+        });
+        edl.undo();
+
+        // Adding a new edit should clear the redo stack.
+        edl.add_edit(EditOp::Delete {
+            start: 0.0,
+            end: 0.25,
+        });
+
+        // Redo should now return None.
+        let redone = edl.redo();
+        assert!(
+            redone.is_none(),
+            "redo stack should be cleared after new edit"
+        );
+    }
+
+    // ── apply_edits operation tests ─────────────────────────────────────
+
+    #[test]
+    fn test_apply_delete() {
+        let mut edl = EditDecisionList::new();
+        let sample_rate = 4u32;
+        // 8 frames mono => 2 seconds at sr=4
+        let source = ramp_samples(8, 1);
+        // [0, 1, 2, 3, 4, 5, 6, 7]
+
+        // Delete from 0.5s to 1.0s => frames 2..4 deleted
+        edl.add_edit(EditOp::Delete {
+            start: 0.5,
+            end: 1.0,
+        });
+
+        let result = edl.apply_edits(&source, 1, sample_rate);
+        // Expected: [0, 1, 4, 5, 6, 7]
+        assert_eq!(result, vec![0.0, 1.0, 4.0, 5.0, 6.0, 7.0]);
+    }
+
+    #[test]
+    fn test_apply_silence() {
+        let mut edl = EditDecisionList::new();
+        let sample_rate = 4u32;
+        let source = ramp_samples(8, 1);
+        // [0, 1, 2, 3, 4, 5, 6, 7]
+
+        // Silence from 0.5s to 1.0s => frames 2..4 zeroed
+        edl.add_edit(EditOp::Silence {
+            start: 0.5,
+            end: 1.0,
+        });
+
+        let result = edl.apply_edits(&source, 1, sample_rate);
+        // Length should be preserved.
+        assert_eq!(result.len(), source.len());
+        // Expected: [0, 1, 0, 0, 4, 5, 6, 7]
+        assert_eq!(result, vec![0.0, 1.0, 0.0, 0.0, 4.0, 5.0, 6.0, 7.0]);
+    }
+
+    #[test]
+    fn test_apply_processed_audio() {
+        let mut edl = EditDecisionList::new();
+        let sample_rate = 4u32;
+        let source = ramp_samples(8, 1);
+        // [0, 1, 2, 3, 4, 5, 6, 7]
+
+        // Replace frames 2..4 (0.5s-1.0s) with [99, 88, 77]
+        edl.add_edit(EditOp::ProcessedAudio {
+            samples: vec![99.0, 88.0, 77.0],
+            start: 0.5,
+            end: 1.0,
+        });
+
+        let result = edl.apply_edits(&source, 1, sample_rate);
+        // Expected: [0, 1, 99, 88, 77, 4, 5, 6, 7]
+        assert_eq!(result, vec![0.0, 1.0, 99.0, 88.0, 77.0, 4.0, 5.0, 6.0, 7.0]);
+    }
+
+    #[test]
+    fn test_get_edited_duration_after_delete() {
+        let mut edl = EditDecisionList::new();
+        let original_duration = 10.0; // 10 seconds
+
+        // Delete a 2-second region.
+        edl.add_edit(EditOp::Delete {
+            start: 3.0,
+            end: 5.0,
+        });
+
+        let new_duration = edl.get_edited_duration(original_duration);
+        assert!(
+            (new_duration - 8.0).abs() < 1e-9,
+            "expected ~8.0s after deleting 2s, got {}",
+            new_duration
+        );
+    }
+}
