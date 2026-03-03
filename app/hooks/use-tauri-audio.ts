@@ -114,6 +114,7 @@ export async function seekAudio(position: number): Promise<void> {
 export async function deleteRegion(start: number, end: number): Promise<void> {
   const result = await invoke<UpdatedPeaks>("delete_region", { start, end });
   applyUpdatedPeaks(result);
+  useAudioStore.getState().addDeletedRegion({ start, end });
 }
 
 export async function undoEdit(): Promise<void> {

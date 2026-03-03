@@ -35,6 +35,7 @@ export interface AudioState {
   selectedRegion: { start: number; end: number } | null;
   previewMode: "original" | "processed" | null;
   detectedSilenceRegions: { start: number; end: number }[];
+  deletedRegions: { start: number; end: number }[];
   compressionApplied: boolean;
   noiseReductionApplied: boolean;
 
@@ -48,6 +49,7 @@ export interface AudioState {
   setMetadata: (metadata: Partial<Metadata>) => void;
   setPreviewMode: (mode: "original" | "processed" | null) => void;
   setDetectedSilenceRegions: (regions: { start: number; end: number }[]) => void;
+  addDeletedRegion: (region: { start: number; end: number }) => void;
   setCompressionApplied: (applied: boolean) => void;
   setNoiseReductionApplied: (applied: boolean) => void;
 }
@@ -80,6 +82,7 @@ export const useAudioStore = create<AudioState>()(
       selectedRegion: null,
       previewMode: null,
       detectedSilenceRegions: [],
+      deletedRegions: [],
       compressionApplied: false,
       noiseReductionApplied: false,
 
@@ -95,6 +98,7 @@ export const useAudioStore = create<AudioState>()(
           selectedRegion: null,
           previewMode: null,
           detectedSilenceRegions: [],
+          deletedRegions: [],
           compressionApplied: false,
           noiseReductionApplied: false,
         }),
@@ -112,6 +116,7 @@ export const useAudioStore = create<AudioState>()(
           selectedRegion: null,
           previewMode: null,
           detectedSilenceRegions: [],
+          deletedRegions: [],
           compressionApplied: false,
           noiseReductionApplied: false,
         }),
@@ -139,6 +144,11 @@ export const useAudioStore = create<AudioState>()(
 
       setDetectedSilenceRegions: (regions) =>
         set({ detectedSilenceRegions: regions }),
+
+      addDeletedRegion: (region) =>
+        set((state) => ({
+          deletedRegions: [...state.deletedRegions, region],
+        })),
 
       setCompressionApplied: (applied) =>
         set({ compressionApplied: applied }),
