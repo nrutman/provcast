@@ -64,6 +64,40 @@ useAudioStore.ts    →  export const useAudioStore = ...
 
 **Avoid** catch-all files like `utils.ts` or `helpers.ts`. If a utility is used in multiple places, give it its own file named after what it does.
 
+### Directory Structure (Namespaces)
+
+Each directory acts as a namespace. Organize its contents by visibility:
+
+| Subdirectory | Purpose |
+|-------------|---------|
+| *(top level)* | Public members — the primary exports of this namespace |
+| `utils/` | Private helpers shared across files in the namespace |
+| `hooks/` | React hooks used within the namespace |
+| `errors/` | Custom Error classes used within the namespace |
+| `__tests__/` | Tests for the public members |
+
+```
+app/components/steps/           # Namespace: wizard step components
+  FileSelectStep.tsx            # Public: step component
+  NormalizationStep.tsx         # Public: step component
+  TrimmingStep.tsx              # Public: step component
+  MetadataStep.tsx              # Public: step component
+  ExportStep.tsx                # Public: step component
+  utils/                        # Private: shared helpers
+    formatTime.ts               # Shared time formatting functions
+  __tests__/                    # Tests
+    FileSelectStep.test.tsx
+    NormalizationStep.test.tsx
+```
+
+**Guidelines:**
+- Helpers used by only one file should stay **inline** in that file (at the bottom, per source code ordering)
+- Helpers shared across multiple files in the same namespace go in `utils/`
+- React hooks that serve a namespace go in `hooks/` (distinct from plain utility functions)
+- Tests always go in `__tests__/`, mirroring the source file name
+
+**Rust equivalent:** Rust uses `mod.rs` for public API, private functions within modules, and `#[cfg(test)] mod tests` inline. No separate `utils/` directory is needed since Rust's module privacy handles this natively.
+
 ### Source Code Ordering
 
 Within each file, code should be ordered as follows:

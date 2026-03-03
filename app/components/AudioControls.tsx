@@ -2,6 +2,7 @@ import { useAudioStore } from "@/stores/useAudioStore";
 import { playAudio, pauseAudio, stopAudio } from "@/hooks/tauri/playback";
 import { usePlaybackPositionSync } from "@/hooks/tauri/playback";
 import { Button } from "@/components/ui/button";
+import { formatTimePrecise } from "@/components/utils/formatTime";
 import { Play, Pause, Square } from "lucide-react";
 
 export function AudioControls() {
@@ -40,26 +41,16 @@ export function AudioControls() {
       </div>
 
       <div className="font-mono text-sm text-foreground">
-        {formatTime(playbackPosition)} / {formatTime(duration)}
+        {formatTimePrecise(playbackPosition)} / {formatTimePrecise(duration)}
       </div>
 
       {selectedRegion && (
         <div className="text-xs text-muted-foreground">
-          Selection: {formatTime(selectedRegion.start)} — {formatTime(selectedRegion.end)} (
-          {formatTime(selectedRegion.end - selectedRegion.start)})
+          Selection: {formatTimePrecise(selectedRegion.start)} —{" "}
+          {formatTimePrecise(selectedRegion.end)} (
+          {formatTimePrecise(selectedRegion.end - selectedRegion.start)})
         </div>
       )}
     </div>
   );
-}
-
-function formatTime(seconds: number): string {
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  const s = Math.floor(seconds % 60);
-  const ms = Math.floor((seconds % 1) * 100);
-  if (h > 0) {
-    return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}.${String(ms).padStart(2, "0")}`;
-  }
-  return `${m}:${String(s).padStart(2, "0")}.${String(ms).padStart(2, "0")}`;
 }

@@ -4,6 +4,7 @@ import { playAudio } from "@/hooks/tauri/playback";
 import { deleteRegion, undoEdit, redoEdit } from "@/hooks/tauri/editing";
 import { detectSilence, trimSilence } from "@/hooks/tauri/processing";
 import { type SilenceRegion } from "@/hooks/tauri/types";
+import { formatTimeTenths } from "@/components/utils/formatTime";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
@@ -52,14 +53,6 @@ export function TrimmingStep() {
   );
 }
 
-function formatTime(seconds: number): string {
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  const whole = Math.floor(secs);
-  const tenths = Math.floor((secs - whole) * 10);
-  return `${mins}:${whole.toString().padStart(2, "0")}.${tenths}`;
-}
-
 function ManualTrimSection() {
   const selectedRegion = useAudioStore((s) => s.selectedRegion);
   const [deleting, setDeleting] = useState(false);
@@ -88,7 +81,7 @@ function ManualTrimSection() {
         </div>
         {selectedRegion && (
           <Badge variant="outline">
-            {formatTime(selectedRegion.start)} - {formatTime(selectedRegion.end)}
+            {formatTimeTenths(selectedRegion.start)} - {formatTimeTenths(selectedRegion.end)}
           </Badge>
         )}
       </CardHeader>
@@ -257,7 +250,7 @@ function SilenceDetectionSection() {
                         className="h-4 w-4 rounded border-muted-foreground/50"
                       />
                       <span className="font-mono">
-                        {formatTime(item.region.start)} - {formatTime(item.region.end)}
+                        {formatTimeTenths(item.region.start)} - {formatTimeTenths(item.region.end)}
                       </span>
                       <span className="text-muted-foreground">({duration.toFixed(1)}s)</span>
                     </label>
@@ -345,7 +338,7 @@ function EditHistorySection() {
           <div>
             <p className="text-xs text-muted-foreground">Original</p>
             <p className="text-sm font-medium">
-              {finalDuration !== null ? formatTime(finalDuration) : "--:--.-"}
+              {finalDuration !== null ? formatTimeTenths(finalDuration) : "--:--.-"}
             </p>
           </div>
           <div>
@@ -357,7 +350,7 @@ function EditHistorySection() {
           <div>
             <p className="text-xs text-muted-foreground">Final</p>
             <p className="text-sm font-medium">
-              {finalDuration !== null ? formatTime(finalDuration) : "--:--.-"}
+              {finalDuration !== null ? formatTimeTenths(finalDuration) : "--:--.-"}
             </p>
           </div>
         </div>

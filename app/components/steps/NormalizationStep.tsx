@@ -9,6 +9,7 @@ import {
   stopPreview,
 } from "@/hooks/tauri/processing";
 import { type SilenceRegion } from "@/hooks/tauri/types";
+import { formatTimeBrief } from "@/components/utils/formatTime";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
@@ -46,12 +47,6 @@ export function NormalizationStep() {
       <NoiseReductionSection />
     </div>
   );
-}
-
-function formatTime(seconds: number): string {
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
-  return `${mins}:${secs.toString().padStart(2, "0")}`;
 }
 
 function ABToggle({
@@ -345,7 +340,7 @@ function NoiseReductionSection() {
               <p className="text-sm">
                 A quiet section was found at{" "}
                 <span className="font-medium">
-                  {formatTime(quietRegion.start)}-{formatTime(quietRegion.end)}
+                  {formatTimeBrief(quietRegion.start)}-{formatTimeBrief(quietRegion.end)}
                 </span>
               </p>
               {!regionAccepted ? (

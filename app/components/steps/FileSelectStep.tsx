@@ -3,6 +3,7 @@ import { useAudioStore, type AudioInfo } from "@/stores/useAudioStore";
 import { useUIStore } from "@/stores/useUIStore";
 import { loadAudio } from "@/hooks/tauri/playback";
 import { readMetadata } from "@/hooks/tauri/metadata";
+import { formatTimeBrief } from "@/components/utils/formatTime";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { FileAudio, Upload, RefreshCw } from "lucide-react";
@@ -16,12 +17,6 @@ export function FileSelectStep() {
   }
 
   return <DropZone />;
-}
-
-function formatDuration(seconds: number): string {
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
-  return `${mins}:${secs.toString().padStart(2, "0")}`;
 }
 
 function formatSampleRate(rate: number): string {
@@ -100,7 +95,7 @@ function FileInfo({ filePath, audioInfo }: { filePath: string; audioInfo: AudioI
             <div className="mt-3 grid grid-cols-2 gap-x-8 gap-y-2 text-sm text-muted-foreground">
               <span>Duration</span>
               <span className="font-medium text-foreground">
-                {formatDuration(audioInfo.duration)}
+                {formatTimeBrief(audioInfo.duration)}
               </span>
               <span>Format</span>
               <span className="font-medium text-foreground">{audioInfo.format.toUpperCase()}</span>

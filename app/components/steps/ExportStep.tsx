@@ -3,6 +3,7 @@ import { useAudioStore } from "@/stores/useAudioStore";
 import { playAudio } from "@/hooks/tauri/playback";
 import { estimateExportSize, exportMp3, previewExport } from "@/hooks/tauri/export";
 import { type ExportParams, type SizeEstimate } from "@/hooks/tauri/types";
+import { formatTimeBrief } from "@/components/utils/formatTime";
 import { save } from "@tauri-apps/plugin-dialog";
 import { listen } from "@tauri-apps/api/event";
 import { Button } from "@/components/ui/button";
@@ -279,7 +280,7 @@ export function ExportStep() {
           <div className="flex items-center gap-2 text-sm">
             <Clock className="h-4 w-4 text-muted-foreground" />
             <span className="text-muted-foreground">Duration:</span>
-            <span className="font-medium">{formatDuration(duration)}</span>
+            <span className="font-medium">{formatTimeBrief(duration)}</span>
           </div>
           <Separator orientation="vertical" className="h-5" />
           <div className="flex items-center gap-2 text-sm">
@@ -307,7 +308,7 @@ export function ExportStep() {
             <p className="text-sm font-medium">Preview at these settings</p>
             <p className="text-xs text-muted-foreground">
               {selectedRegion
-                ? `Selected region: ${formatDuration(selectedRegion.start)} - ${formatDuration(selectedRegion.end)}`
+                ? `Selected region: ${formatTimeBrief(selectedRegion.start)} - ${formatTimeBrief(selectedRegion.end)}`
                 : "Select a region on the waveform first"}
             </p>
           </div>
@@ -374,10 +375,4 @@ function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
-function formatDuration(seconds: number): string {
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
-  return `${mins}:${secs.toString().padStart(2, "0")}`;
 }
