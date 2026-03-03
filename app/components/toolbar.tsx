@@ -1,23 +1,11 @@
-import { open, save } from "@tauri-apps/plugin-dialog";
+import { open } from "@tauri-apps/plugin-dialog";
 import { useAudioStore } from "@/stores/audio-store";
 import { useUIStore } from "@/stores/ui-store";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
-import {
-  loadAudio,
-  undoEdit,
-  redoEdit,
-  readMetadata,
-} from "@/hooks/use-tauri-audio";
+import { loadAudio, undoEdit, redoEdit, readMetadata } from "@/hooks/use-tauri-audio";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import {
-  FolderOpen,
-  Undo2,
-  Redo2,
-  ZoomIn,
-  ZoomOut,
-  Download,
-} from "lucide-react";
+import { FolderOpen, Undo2, Redo2, ZoomIn, ZoomOut, Download } from "lucide-react";
 
 export function Toolbar() {
   useKeyboardShortcuts();
@@ -98,9 +86,7 @@ export function Toolbar() {
 
       <div className="flex-1" />
 
-      {fileName && (
-        <span className="mr-3 text-sm text-muted-foreground">{fileName}</span>
-      )}
+      {fileName && <span className="mr-3 text-sm text-muted-foreground">{fileName}</span>}
 
       <Button
         variant="default"

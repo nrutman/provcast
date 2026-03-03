@@ -2,7 +2,6 @@ import { useState, useCallback } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { useAudioStore } from "@/stores/audio-store";
 import { setAlbumArt } from "@/hooks/use-tauri-audio";
-import { Button } from "@/components/ui/button";
 import { ImagePlus } from "lucide-react";
 
 export function AlbumArtEditor() {
@@ -52,12 +51,9 @@ export function AlbumArtEditor() {
       </div>
       {artInfo && (
         <div className="text-xs text-muted-foreground">
-          {artInfo.width}x{artInfo.height} &middot;{" "}
-          {(artInfo.size_bytes / 1024).toFixed(1)} KB
+          {artInfo.width}x{artInfo.height} &middot; {(artInfo.size_bytes / 1024).toFixed(1)} KB
           {artInfo.size_bytes > 256000 && (
-            <span className="ml-1 text-destructive">
-              (large — may increase file size)
-            </span>
+            <span className="ml-1 text-destructive">(large — may increase file size)</span>
           )}
         </div>
       )}

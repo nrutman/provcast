@@ -21,13 +21,9 @@ export const useUIStore = create<UIState>()((set) => ({
   exportDialogOpen: false,
 
   setZoom: (zoom) => set({ zoom: Math.max(1, Math.min(zoom, 500)) }),
-  zoomIn: () =>
-    set((s) => ({ zoom: Math.min(s.zoom * 1.5, 500) })),
-  zoomOut: () =>
-    set((s) => ({ zoom: Math.max(s.zoom / 1.5, 1) })),
-  toggleProcessingPanel: () =>
-    set((s) => ({ showProcessingPanel: !s.showProcessingPanel })),
-  toggleMetadataPanel: () =>
-    set((s) => ({ showMetadataPanel: !s.showMetadataPanel })),
+  zoomIn: () => set((s) => ({ zoom: Math.min(s.zoom * 1.5, 500) })),
+  zoomOut: () => set((s) => ({ zoom: Math.max(s.zoom / 1.5, 1) })),
+  toggleProcessingPanel: () => set((s) => ({ showProcessingPanel: !s.showProcessingPanel })),
+  toggleMetadataPanel: () => set((s) => ({ showMetadataPanel: !s.showMetadataPanel })),
   setExportDialogOpen: (open) => set({ exportDialogOpen: open }),
 }));

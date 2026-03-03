@@ -29,11 +29,7 @@ export function MetadataEditor() {
 
       <div className="space-y-3">
         <h4 className="text-xs font-medium text-muted-foreground">Basic</h4>
-        <Field
-          label="Title"
-          value={metadata.title}
-          onChange={(v) => handleChange("title", v)}
-        />
+        <Field label="Title" value={metadata.title} onChange={(v) => handleChange("title", v)} />
         <Field
           label="Artist / Host"
           value={metadata.artist}
@@ -79,11 +75,7 @@ export function MetadataEditor() {
 
       <div className="space-y-3">
         <h4 className="text-xs font-medium text-muted-foreground">Additional</h4>
-        <Field
-          label="Genre"
-          value={metadata.genre}
-          onChange={(v) => handleChange("genre", v)}
-        />
+        <Field label="Genre" value={metadata.genre} onChange={(v) => handleChange("genre", v)} />
         <Field
           label="Copyright"
           value={metadata.copyright}
@@ -94,11 +86,7 @@ export function MetadataEditor() {
           value={metadata.publisher}
           onChange={(v) => handleChange("publisher", v)}
         />
-        <Field
-          label="URL"
-          value={metadata.url}
-          onChange={(v) => handleChange("url", v)}
-        />
+        <Field label="URL" value={metadata.url} onChange={(v) => handleChange("url", v)} />
       </div>
 
       <Button size="sm" className="w-full" onClick={handleSave}>
@@ -122,11 +110,7 @@ function Field({
   return (
     <div className={`space-y-1 ${className ?? ""}`}>
       <Label className="text-xs">{label}</Label>
-      <Input
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="h-8 text-xs"
-      />
+      <Input value={value} onChange={(e) => onChange(e.target.value)} className="h-8 text-xs" />
     </div>
   );
 }

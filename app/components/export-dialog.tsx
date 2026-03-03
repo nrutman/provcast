@@ -2,22 +2,13 @@ import { useState, useEffect } from "react";
 import { save } from "@tauri-apps/plugin-dialog";
 import { useAudioStore } from "@/stores/audio-store";
 import { useUIStore } from "@/stores/ui-store";
-import {
-  estimateExportSize,
-  exportMp3,
-  type ExportParams,
-} from "@/hooks/use-tauri-audio";
+import { estimateExportSize, exportMp3, type ExportParams } from "@/hooks/use-tauri-audio";
 import { listen } from "@tauri-apps/api/event";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Progress } from "@/components/ui/progress";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const CBR_OPTIONS = [64, 96, 128, 160, 192, 224, 256, 320];
 const VBR_LABELS = ["V0 (Best)", "V1", "V2", "V3", "V4", "V5", "V6", "V7", "V8", "V9 (Smallest)"];
@@ -56,18 +47,18 @@ export function ExportDialog() {
 
   useEffect(() => {
     if (!open || duration === 0) return;
-    estimateExportSize(params).then(setSizeEstimate).catch(() => {});
+    estimateExportSize(params)
+      .then(setSizeEstimate)
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, mode, bitrate, vbrQuality, sampleRate, mono, duration]);
 
   useEffect(() => {
     if (!exporting) return;
-    const unlisten = listen<{ percent: number; stage: string }>(
-      "export-progress",
-      (event) => {
-        setProgress(event.payload.percent);
-        setStage(event.payload.stage);
-      },
-    );
+    const unlisten = listen<{ percent: number; stage: string }>("export-progress", (event) => {
+      setProgress(event.payload.percent);
+      setStage(event.payload.stage);
+    });
     return () => {
       unlisten.then((fn) => fn());
     };
@@ -123,9 +114,7 @@ export function ExportDialog() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label className="text-xs">Bitrate</Label>
-                <span className="text-xs text-muted-foreground">
-                  {bitrate} kbps
-                </span>
+                <span className="text-xs text-muted-foreground">{bitrate} kbps</span>
               </div>
               <div className="flex flex-wrap gap-1">
                 {CBR_OPTIONS.map((b) => (
@@ -145,9 +134,7 @@ export function ExportDialog() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label className="text-xs">Quality</Label>
-                <span className="text-xs text-muted-foreground">
-                  {VBR_LABELS[vbrQuality]}
-                </span>
+                <span className="text-xs text-muted-foreground">{VBR_LABELS[vbrQuality]}</span>
               </div>
               <Slider
                 value={[vbrQuality]}
@@ -221,11 +208,7 @@ export function ExportDialog() {
             </div>
           )}
 
-          <Button
-            className="w-full"
-            onClick={handleExport}
-            disabled={exporting}
-          >
+          <Button className="w-full" onClick={handleExport} disabled={exporting}>
             {exporting ? "Exporting..." : "Export MP3"}
           </Button>
         </div>

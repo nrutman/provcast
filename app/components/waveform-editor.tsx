@@ -1,4 +1,4 @@
-import { useRef, useCallback, useEffect } from "react";
+import { useRef, useEffect } from "react";
 import { useWavesurfer } from "@wavesurfer/react";
 import RegionsPlugin from "wavesurfer.js/dist/plugins/regions.js";
 import MinimapPlugin from "wavesurfer.js/dist/plugins/minimap.js";
@@ -67,9 +67,9 @@ export function WaveformEditor() {
   useEffect(() => {
     if (!wavesurfer) return;
 
-    const regions = wavesurfer.getActivePlugins().find(
-      (p): p is RegionsPlugin => p instanceof RegionsPlugin,
-    );
+    const regions = wavesurfer
+      .getActivePlugins()
+      .find((p): p is RegionsPlugin => p instanceof RegionsPlugin);
     if (!regions) return;
 
     let isCreating = false;
@@ -117,10 +117,7 @@ export function WaveformEditor() {
 
   return (
     <div className="flex-1 overflow-hidden p-4">
-      <div
-        ref={containerRef}
-        className="rounded-md border border-border bg-background"
-      />
+      <div ref={containerRef} className="rounded-md border border-border bg-background" />
     </div>
   );
 }

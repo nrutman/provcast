@@ -16,9 +16,7 @@ function EditorView() {
     return (
       <div className="flex flex-1 items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-semibold text-muted-foreground">
-            No file loaded
-          </h2>
+          <h2 className="text-2xl font-semibold text-muted-foreground">No file loaded</h2>
           <p className="mt-2 text-sm text-muted-foreground">
             Open an audio file to get started (Ctrl+O)
           </p>

@@ -151,12 +151,7 @@ export function ProcessingPanel() {
             step={1}
           />
         </div>
-        <Button
-          size="sm"
-          className="w-full"
-          onClick={handleCompression}
-          disabled={processing}
-        >
+        <Button size="sm" className="w-full" onClick={handleCompression} disabled={processing}>
           Apply Compression
         </Button>
       </div>
@@ -165,15 +160,11 @@ export function ProcessingPanel() {
 
       {/* Noise Reduction */}
       <div className="space-y-3">
-        <h4 className="text-xs font-medium text-muted-foreground">
-          Noise Reduction
-        </h4>
+        <h4 className="text-xs font-medium text-muted-foreground">Noise Reduction</h4>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label className="text-xs">Strength</Label>
-            <span className="text-xs text-muted-foreground">
-              {noiseStrength}%
-            </span>
+            <span className="text-xs text-muted-foreground">{noiseStrength}%</span>
           </div>
           <Slider
             value={[noiseStrength]}
@@ -183,12 +174,7 @@ export function ProcessingPanel() {
             step={1}
           />
         </div>
-        <Button
-          size="sm"
-          className="w-full"
-          onClick={handleNoiseReduction}
-          disabled={processing}
-        >
+        <Button size="sm" className="w-full" onClick={handleNoiseReduction} disabled={processing}>
           Apply Noise Reduction
         </Button>
       </div>
@@ -197,15 +183,11 @@ export function ProcessingPanel() {
 
       {/* Silence Trimming */}
       <div className="space-y-3">
-        <h4 className="text-xs font-medium text-muted-foreground">
-          Silence Trimming
-        </h4>
+        <h4 className="text-xs font-medium text-muted-foreground">Silence Trimming</h4>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label className="text-xs">Threshold</Label>
-            <span className="text-xs text-muted-foreground">
-              {silenceThreshold} dB
-            </span>
+            <span className="text-xs text-muted-foreground">{silenceThreshold} dB</span>
           </div>
           <Slider
             value={[silenceThreshold]}
@@ -218,9 +200,7 @@ export function ProcessingPanel() {
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label className="text-xs">Min Duration</Label>
-            <span className="text-xs text-muted-foreground">
-              {minSilenceDuration}s
-            </span>
+            <span className="text-xs text-muted-foreground">{minSilenceDuration}s</span>
           </div>
           <Slider
             value={[minSilenceDuration]}
@@ -233,9 +213,7 @@ export function ProcessingPanel() {
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label className="text-xs">Keep Duration</Label>
-            <span className="text-xs text-muted-foreground">
-              {keepDuration}s
-            </span>
+            <span className="text-xs text-muted-foreground">{keepDuration}s</span>
           </div>
           <Slider
             value={[keepDuration]}

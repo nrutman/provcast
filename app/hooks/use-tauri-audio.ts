@@ -123,10 +123,7 @@ export async function detectSilence(
   return invoke("detect_silence", { thresholdDb, minDurationSecs });
 }
 
-export async function trimSilence(
-  regions: SilenceRegion[],
-  keepDuration: number,
-): Promise<void> {
+export async function trimSilence(regions: SilenceRegion[], keepDuration: number): Promise<void> {
   const result = await invoke<UpdatedPeaks>("trim_silence", { regions, keepDuration });
   applyUpdatedPeaks(result);
 }
