@@ -5,6 +5,10 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./app"),
+      "@tauri-apps/plugin-dialog": path.resolve(
+        __dirname,
+        "./app/test/__mocks__/@tauri-apps/plugin-dialog.ts",
+      ),
       "@tauri-apps/api/core": path.resolve(
         __dirname,
         "./app/test/__mocks__/@tauri-apps/api/core.ts",
