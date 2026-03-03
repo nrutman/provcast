@@ -1,14 +1,8 @@
 import { useEffect } from "react";
-import { useAudioStore } from "@/stores/audio-store";
-import { useUIStore } from "@/stores/ui-store";
-import {
-  playAudio,
-  pauseAudio,
-  stopAudio,
-  deleteRegion,
-  undoEdit,
-  redoEdit,
-} from "./use-tauri-audio";
+import { useAudioStore } from "@/stores/useAudioStore";
+import { useUIStore } from "@/stores/useUIStore";
+import { playAudio, pauseAudio, stopAudio } from "./tauri/playback";
+import { deleteRegion, undoEdit, redoEdit } from "./tauri/editing";
 
 export function useKeyboardShortcuts() {
   const store = useAudioStore.getState;

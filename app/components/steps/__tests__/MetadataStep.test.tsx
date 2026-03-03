@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MetadataStep } from "../metadata-step";
+import { MetadataStep } from "../MetadataStep";
 
 describe("MetadataStep", () => {
   it("renders album art section", () => {

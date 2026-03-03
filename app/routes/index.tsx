@@ -1,15 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { WizardLayout } from "@/components/wizard/wizard-layout";
-import { StepSidebar } from "@/components/wizard/step-sidebar";
-import { WaveformEditor } from "@/components/waveform-editor";
-import { AudioControls } from "@/components/audio-controls";
-import { FileSelectStep } from "@/components/steps/file-select-step";
-import { NormalizationStep } from "@/components/steps/normalization-step";
-import { TrimmingStep } from "@/components/steps/trimming-step";
-import { MetadataStep } from "@/components/steps/metadata-step";
-import { ExportStep } from "@/components/steps/export-step";
-import { useUIStore, type WizardStep } from "@/stores/ui-store";
-import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
+import { WizardLayout } from "@/components/wizard/WizardLayout";
+import { StepSidebar } from "@/components/wizard/StepSidebar";
+import { WaveformEditor } from "@/components/WaveformEditor";
+import { AudioControls } from "@/components/AudioControls";
+import { FileSelectStep } from "@/components/steps/FileSelectStep";
+import { NormalizationStep } from "@/components/steps/NormalizationStep";
+import { TrimmingStep } from "@/components/steps/TrimmingStep";
+import { MetadataStep } from "@/components/steps/MetadataStep";
+import { ExportStep } from "@/components/steps/ExportStep";
+import { useUIStore, type WizardStep } from "@/stores/useUIStore";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 
 export const Route = createFileRoute("/")({
   component: EditorView,

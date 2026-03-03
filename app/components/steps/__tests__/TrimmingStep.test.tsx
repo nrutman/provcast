@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { TrimmingStep } from "../trimming-step";
+import { TrimmingStep } from "../TrimmingStep";
 
 describe("TrimmingStep", () => {
   it("renders delete and play selection buttons", () => {

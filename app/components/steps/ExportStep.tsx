@@ -1,13 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
-import { useAudioStore } from "@/stores/audio-store";
-import {
-  estimateExportSize,
-  exportMp3,
-  previewExport,
-  playAudio,
-  type ExportParams,
-  type SizeEstimate,
-} from "@/hooks/use-tauri-audio";
+import { useAudioStore } from "@/stores/useAudioStore";
+import { playAudio } from "@/hooks/tauri/playback";
+import { estimateExportSize, exportMp3, previewExport } from "@/hooks/tauri/export";
+import { type ExportParams, type SizeEstimate } from "@/hooks/tauri/types";
 import { save } from "@tauri-apps/plugin-dialog";
 import { listen } from "@tauri-apps/api/event";
 import { Button } from "@/components/ui/button";
@@ -28,18 +23,6 @@ import {
 } from "lucide-react";
 
 const CBR_BITRATES = [24, 32, 48, 64, 96, 128, 160, 192, 256, 320] as const;
-
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
-function formatDuration(seconds: number): string {
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
-  return `${mins}:${secs.toString().padStart(2, "0")}`;
-}
 
 export function ExportStep() {
   const [mode, setMode] = useState<"cbr" | "vbr">("cbr");
@@ -385,4 +368,16 @@ export function ExportStep() {
       </Button>
     </div>
   );
+}
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function formatDuration(seconds: number): string {
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins}:${secs.toString().padStart(2, "0")}`;
 }

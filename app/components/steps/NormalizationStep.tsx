@@ -1,14 +1,14 @@
 import { useState, useEffect, useCallback } from "react";
-import { useAudioStore } from "@/stores/audio-store";
-import { useUIStore } from "@/stores/ui-store";
+import { useAudioStore } from "@/stores/useAudioStore";
+import { useUIStore } from "@/stores/useUIStore";
 import {
   applyCompression,
   applyNoiseReduction,
   findQuietestRegion,
   previewEffect,
   stopPreview,
-  type SilenceRegion,
-} from "@/hooks/use-tauri-audio";
+} from "@/hooks/tauri/processing";
+import { type SilenceRegion } from "@/hooks/tauri/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
@@ -16,6 +16,37 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Volume2, AudioLines, Check, Loader2 } from "lucide-react";
+
+export function NormalizationStep() {
+  const setPreviewMode = useAudioStore((s) => s.setPreviewMode);
+  const currentStep = useUIStore((s) => s.currentStep);
+
+  // Clean up preview when navigating away from this step
+  useEffect(() => {
+    return () => {
+      stopPreview();
+      setPreviewMode(null);
+    };
+  }, [currentStep, setPreviewMode]);
+
+  return (
+    <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-6">
+      <div>
+        <h2 className="text-lg font-semibold">Audio Normalization</h2>
+        <p className="text-sm text-muted-foreground">
+          Apply compression and noise reduction to improve your audio quality. Use the A/B toggle to
+          compare before and after.
+        </p>
+      </div>
+
+      <CompressionSection />
+
+      <Separator />
+
+      <NoiseReductionSection />
+    </div>
+  );
+}
 
 function formatTime(seconds: number): string {
   const mins = Math.floor(seconds / 60);
@@ -368,36 +399,5 @@ function NoiseReductionSection() {
         </div>
       </CardContent>
     </Card>
-  );
-}
-
-export function NormalizationStep() {
-  const setPreviewMode = useAudioStore((s) => s.setPreviewMode);
-  const currentStep = useUIStore((s) => s.currentStep);
-
-  // Clean up preview when navigating away from this step
-  useEffect(() => {
-    return () => {
-      stopPreview();
-      setPreviewMode(null);
-    };
-  }, [currentStep, setPreviewMode]);
-
-  return (
-    <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-6">
-      <div>
-        <h2 className="text-lg font-semibold">Audio Normalization</h2>
-        <p className="text-sm text-muted-foreground">
-          Apply compression and noise reduction to improve your audio quality. Use the A/B toggle to
-          compare before and after.
-        </p>
-      </div>
-
-      <CompressionSection />
-
-      <Separator />
-
-      <NoiseReductionSection />
-    </div>
   );
 }

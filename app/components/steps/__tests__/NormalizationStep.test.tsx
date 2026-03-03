@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { NormalizationStep } from "../normalization-step";
+import { NormalizationStep } from "../NormalizationStep";
 
 describe("NormalizationStep", () => {
   it("renders compression section", () => {

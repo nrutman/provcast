@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { FileSelectStep } from "../file-select-step";
+import { FileSelectStep } from "../FileSelectStep";
 
 describe("FileSelectStep", () => {
   it("shows drop zone text when no file loaded", () => {

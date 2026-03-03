@@ -1,14 +1,9 @@
 import { useState, useCallback } from "react";
-import { useAudioStore } from "@/stores/audio-store";
-import {
-  deleteRegion,
-  playAudio,
-  undoEdit,
-  redoEdit,
-  detectSilence,
-  trimSilence,
-  type SilenceRegion,
-} from "@/hooks/use-tauri-audio";
+import { useAudioStore } from "@/stores/useAudioStore";
+import { playAudio } from "@/hooks/tauri/playback";
+import { deleteRegion, undoEdit, redoEdit } from "@/hooks/tauri/editing";
+import { detectSilence, trimSilence } from "@/hooks/tauri/processing";
+import { type SilenceRegion } from "@/hooks/tauri/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
@@ -28,17 +23,41 @@ import {
   XCircle,
 } from "lucide-react";
 
+interface CheckedRegion {
+  region: SilenceRegion;
+  checked: boolean;
+}
+
+export function TrimmingStep() {
+  return (
+    <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-6">
+      <div>
+        <h2 className="text-lg font-semibold">Trim & Edit</h2>
+        <p className="text-sm text-muted-foreground">
+          Remove unwanted sections from your audio. Select regions on the waveform or detect and
+          trim silent passages automatically.
+        </p>
+      </div>
+
+      <ManualTrimSection />
+
+      <Separator />
+
+      <SilenceDetectionSection />
+
+      <Separator />
+
+      <EditHistorySection />
+    </div>
+  );
+}
+
 function formatTime(seconds: number): string {
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
   const whole = Math.floor(secs);
   const tenths = Math.floor((secs - whole) * 10);
   return `${mins}:${whole.toString().padStart(2, "0")}.${tenths}`;
-}
-
-interface CheckedRegion {
-  region: SilenceRegion;
-  checked: boolean;
 }
 
 function ManualTrimSection() {
@@ -344,29 +363,5 @@ function EditHistorySection() {
         </div>
       </CardContent>
     </Card>
-  );
-}
-
-export function TrimmingStep() {
-  return (
-    <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-6">
-      <div>
-        <h2 className="text-lg font-semibold">Trim & Edit</h2>
-        <p className="text-sm text-muted-foreground">
-          Remove unwanted sections from your audio. Select regions on the waveform or detect and
-          trim silent passages automatically.
-        </p>
-      </div>
-
-      <ManualTrimSection />
-
-      <Separator />
-
-      <SilenceDetectionSection />
-
-      <Separator />
-
-      <EditHistorySection />
-    </div>
   );
 }

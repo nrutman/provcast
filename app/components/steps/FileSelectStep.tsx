@@ -1,10 +1,22 @@
 import { open } from "@tauri-apps/plugin-dialog";
-import { useAudioStore, type AudioInfo } from "@/stores/audio-store";
-import { useUIStore } from "@/stores/ui-store";
-import { loadAudio, readMetadata } from "@/hooks/use-tauri-audio";
+import { useAudioStore, type AudioInfo } from "@/stores/useAudioStore";
+import { useUIStore } from "@/stores/useUIStore";
+import { loadAudio } from "@/hooks/tauri/playback";
+import { readMetadata } from "@/hooks/tauri/metadata";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { FileAudio, Upload, RefreshCw } from "lucide-react";
+
+export function FileSelectStep() {
+  const filePath = useAudioStore((s) => s.filePath);
+  const audioInfo = useAudioStore((s) => s.audioInfo);
+
+  if (filePath && audioInfo) {
+    return <FileInfo filePath={filePath} audioInfo={audioInfo} />;
+  }
+
+  return <DropZone />;
+}
 
 function formatDuration(seconds: number): string {
   const mins = Math.floor(seconds / 60);
@@ -110,15 +122,4 @@ function FileInfo({ filePath, audioInfo }: { filePath: string; audioInfo: AudioI
       </Card>
     </div>
   );
-}
-
-export function FileSelectStep() {
-  const filePath = useAudioStore((s) => s.filePath);
-  const audioInfo = useAudioStore((s) => s.audioInfo);
-
-  if (filePath && audioInfo) {
-    return <FileInfo filePath={filePath} audioInfo={audioInfo} />;
-  }
-
-  return <DropZone />;
 }

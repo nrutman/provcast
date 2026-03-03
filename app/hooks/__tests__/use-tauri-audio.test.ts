@@ -1,29 +1,19 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { invoke } from "@tauri-apps/api/core";
-import { useAudioStore, type AudioInfo } from "@/stores/audio-store";
+import { useAudioStore, type AudioInfo } from "@/stores/useAudioStore";
+import { loadAudio, playAudio, pauseAudio, stopAudio, seekAudio } from "../tauri/playback";
+import { deleteRegion, undoEdit, redoEdit } from "../tauri/editing";
 import {
-  loadAudio,
-  playAudio,
-  pauseAudio,
-  stopAudio,
-  seekAudio,
-  deleteRegion,
-  undoEdit,
-  redoEdit,
   applyCompression,
   applyNoiseReduction,
   detectSilence,
   trimSilence,
-  readMetadata,
-  updateMetadata,
-  setAlbumArt,
-  estimateExportSize,
-  exportMp3,
   findQuietestRegion,
   previewEffect,
   stopPreview,
-  previewExport,
-} from "../use-tauri-audio";
+} from "../tauri/processing";
+import { readMetadata, updateMetadata, setAlbumArt } from "../tauri/metadata";
+import { estimateExportSize, exportMp3, previewExport } from "../tauri/export";
 
 // ---------- helpers ----------
 

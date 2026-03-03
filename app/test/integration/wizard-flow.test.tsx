@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { useUIStore } from "@/stores/ui-store";
-import { useAudioStore, type AudioInfo } from "@/stores/audio-store";
+import { useUIStore } from "@/stores/useUIStore";
+import { useAudioStore, type AudioInfo } from "@/stores/useAudioStore";
 
 // We can't easily render the full TanStack Router setup, so test the stores and
 // step components together as an integrated whole.
@@ -126,7 +126,7 @@ describe("Wizard Flow Integration", () => {
   // -------------------------------------------------------------------------
   describe("Step sidebar rendering", () => {
     it("renders sidebar and allows step switching", async () => {
-      const { StepSidebar } = await import("@/components/wizard/step-sidebar");
+      const { StepSidebar } = await import("@/components/wizard/StepSidebar");
       const user = userEvent.setup();
       const onStepClick = vi.fn();
 
@@ -146,7 +146,7 @@ describe("Wizard Flow Integration", () => {
     });
 
     it("marks the current step as active via data attribute", async () => {
-      const { StepSidebar } = await import("@/components/wizard/step-sidebar");
+      const { StepSidebar } = await import("@/components/wizard/StepSidebar");
 
       const { rerender } = render(<StepSidebar currentStep={3} onStepClick={() => {}} />);
 
@@ -237,7 +237,7 @@ describe("Wizard Flow Integration", () => {
   // -------------------------------------------------------------------------
   describe("MetadataStep form integration", () => {
     it("renders form fields populated from the store and typing updates local state", async () => {
-      const { MetadataStep } = await import("@/components/steps/metadata-step");
+      const { MetadataStep } = await import("@/components/steps/MetadataStep");
       const user = userEvent.setup();
 
       // Pre-populate metadata in the store (as if read from file tags)
@@ -259,7 +259,7 @@ describe("Wizard Flow Integration", () => {
     });
 
     it("re-mount after step switch shows metadata from the store", async () => {
-      const { MetadataStep } = await import("@/components/steps/metadata-step");
+      const { MetadataStep } = await import("@/components/steps/MetadataStep");
 
       // Simulate: user typed metadata and it was saved to store
       useAudioStore.getState().setMetadata({
@@ -287,7 +287,7 @@ describe("Wizard Flow Integration", () => {
   describe("Keyboard shortcuts", () => {
     it("Ctrl+= zooms in and Ctrl+- zooms out", async () => {
       // Render a simple component that registers shortcuts
-      const { useKeyboardShortcuts } = await import("@/hooks/use-keyboard-shortcuts");
+      const { useKeyboardShortcuts } = await import("@/hooks/useKeyboardShortcuts");
       function ShortcutHost() {
         useKeyboardShortcuts();
         return <div data-testid="host" />;
@@ -310,7 +310,7 @@ describe("Wizard Flow Integration", () => {
     });
 
     it("Escape resets playback position and stops playing", async () => {
-      const { useKeyboardShortcuts } = await import("@/hooks/use-keyboard-shortcuts");
+      const { useKeyboardShortcuts } = await import("@/hooks/useKeyboardShortcuts");
       function ShortcutHost() {
         useKeyboardShortcuts();
         return <div data-testid="host" />;
@@ -329,7 +329,7 @@ describe("Wizard Flow Integration", () => {
     });
 
     it("Space does not toggle play when an input is focused", async () => {
-      const { useKeyboardShortcuts } = await import("@/hooks/use-keyboard-shortcuts");
+      const { useKeyboardShortcuts } = await import("@/hooks/useKeyboardShortcuts");
       function ShortcutHost() {
         useKeyboardShortcuts();
         return <input data-testid="text-input" />;
@@ -351,13 +351,13 @@ describe("Wizard Flow Integration", () => {
   // -------------------------------------------------------------------------
   describe("FileSelectStep gating", () => {
     it("shows drop zone when no file is loaded", async () => {
-      const { FileSelectStep } = await import("@/components/steps/file-select-step");
+      const { FileSelectStep } = await import("@/components/steps/FileSelectStep");
       render(<FileSelectStep />);
       expect(screen.getByText(/drop an audio file/i)).toBeInTheDocument();
     });
 
     it("shows file info when a file is loaded in the store", async () => {
-      const { FileSelectStep } = await import("@/components/steps/file-select-step");
+      const { FileSelectStep } = await import("@/components/steps/FileSelectStep");
 
       simulateFileLoad("/recordings/interview.wav");
 

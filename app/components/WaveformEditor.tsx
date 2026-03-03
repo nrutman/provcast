@@ -4,13 +4,9 @@ import RegionsPlugin from "wavesurfer.js/dist/plugins/regions.js";
 import MinimapPlugin from "wavesurfer.js/dist/plugins/minimap.js";
 import TimelinePlugin from "wavesurfer.js/dist/plugins/timeline.js";
 import type WaveSurfer from "wavesurfer.js";
-import { useAudioStore } from "@/stores/audio-store";
-import { useUIStore } from "@/stores/ui-store";
-import { seekAudio } from "@/hooks/use-tauri-audio";
-
-function getRegionsPlugin(ws: WaveSurfer): RegionsPlugin | null {
-  return ws.getActivePlugins().find((p): p is RegionsPlugin => p instanceof RegionsPlugin) ?? null;
-}
+import { useAudioStore } from "@/stores/useAudioStore";
+import { useUIStore } from "@/stores/useUIStore";
+import { seekAudio } from "@/hooks/tauri/playback";
 
 export function WaveformEditor() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -186,4 +182,8 @@ export function WaveformEditor() {
       <div ref={containerRef} className="rounded-md border border-border bg-background" />
     </div>
   );
+}
+
+function getRegionsPlugin(ws: WaveSurfer): RegionsPlugin | null {
+  return ws.getActivePlugins().find((p): p is RegionsPlugin => p instanceof RegionsPlugin) ?? null;
 }

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
-import { useAudioStore, type Metadata } from "@/stores/audio-store";
-import { updateMetadata, setAlbumArt } from "@/hooks/use-tauri-audio";
+import { useAudioStore, type Metadata } from "@/stores/useAudioStore";
+import { updateMetadata, setAlbumArt } from "@/hooks/tauri/metadata";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
