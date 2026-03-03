@@ -1,29 +1,27 @@
 import { create } from "zustand";
 
-export interface UIState {
-  zoom: number;
-  showProcessingPanel: boolean;
-  showMetadataPanel: boolean;
-  exportDialogOpen: boolean;
+export type WizardStep = 1 | 2 | 3 | 4 | 5;
 
+interface UIState {
+  currentStep: WizardStep;
+  fileLoaded: boolean;
+  zoom: number;
+
+  setCurrentStep: (step: WizardStep) => void;
+  setFileLoaded: (loaded: boolean) => void;
   setZoom: (zoom: number) => void;
   zoomIn: () => void;
   zoomOut: () => void;
-  toggleProcessingPanel: () => void;
-  toggleMetadataPanel: () => void;
-  setExportDialogOpen: (open: boolean) => void;
 }
 
 export const useUIStore = create<UIState>()((set) => ({
+  currentStep: 1,
+  fileLoaded: false,
   zoom: 1,
-  showProcessingPanel: true,
-  showMetadataPanel: true,
-  exportDialogOpen: false,
 
-  setZoom: (zoom) => set({ zoom: Math.max(1, Math.min(zoom, 500)) }),
-  zoomIn: () => set((s) => ({ zoom: Math.min(s.zoom * 1.5, 500) })),
-  zoomOut: () => set((s) => ({ zoom: Math.max(s.zoom / 1.5, 1) })),
-  toggleProcessingPanel: () => set((s) => ({ showProcessingPanel: !s.showProcessingPanel })),
-  toggleMetadataPanel: () => set((s) => ({ showMetadataPanel: !s.showMetadataPanel })),
-  setExportDialogOpen: (open) => set({ exportDialogOpen: open }),
+  setCurrentStep: (step) => set({ currentStep: step }),
+  setFileLoaded: (loaded) => set({ fileLoaded: loaded }),
+  setZoom: (zoom) => set({ zoom: Math.max(1, Math.min(500, zoom)) }),
+  zoomIn: () => set((s) => ({ zoom: Math.min(500, s.zoom * 1.25) })),
+  zoomOut: () => set((s) => ({ zoom: Math.max(1, s.zoom / 1.25) })),
 }));
