@@ -39,12 +39,8 @@ pub struct UpdatedPeaks {
 // ── Audio loading ───────────────────────────────────────────────────────────
 
 #[tauri::command]
-pub fn load_audio(
-    path: String,
-    state: State<'_, AudioEngineState>,
-) -> Result<AudioInfo, String> {
-    let (samples, sample_rate, channels, format) =
-        decode_file(&path).map_err(|e| e.to_string())?;
+pub fn load_audio(path: String, state: State<'_, AudioEngineState>) -> Result<AudioInfo, String> {
+    let (samples, sample_rate, channels, format) = decode_file(&path).map_err(|e| e.to_string())?;
 
     let total_frames = samples.len() / channels as usize;
     let duration = total_frames as f64 / sample_rate as f64;
@@ -83,20 +79,24 @@ pub fn load_audio(
 #[tauri::command]
 pub fn play_audio(
     from_position: f64,
+    use_preview: Option<bool>,
     state: State<'_, AudioEngineState>,
 ) -> Result<(), String> {
     let mut engine = state.0.lock();
 
-    let rendered = engine
-        .rendered_samples()
-        .ok_or("No audio loaded")?;
+    let samples = if use_preview.unwrap_or(false) {
+        engine
+            .preview_samples
+            .clone()
+            .ok_or("No preview available")?
+    } else {
+        engine.rendered_samples().ok_or("No audio loaded")?
+    };
 
     let sr = engine.sample_rate;
     let ch = engine.channels;
 
-    engine
-        .playback
-        .play(&rendered, sr, ch, from_position)
+    engine.playback.play(&samples, sr, ch, from_position)
 }
 
 #[tauri::command]
@@ -112,15 +112,10 @@ pub fn stop_audio(state: State<'_, AudioEngineState>) -> Result<(), String> {
 }
 
 #[tauri::command]
-pub fn seek_audio(
-    position: f64,
-    state: State<'_, AudioEngineState>,
-) -> Result<(), String> {
+pub fn seek_audio(position: f64, state: State<'_, AudioEngineState>) -> Result<(), String> {
     let mut engine = state.0.lock();
 
-    let rendered = engine
-        .rendered_samples()
-        .ok_or("No audio loaded")?;
+    let rendered = engine.rendered_samples().ok_or("No audio loaded")?;
 
     let sr = engine.sample_rate;
     let ch = engine.channels;
@@ -129,9 +124,7 @@ pub fn seek_audio(
 }
 
 #[tauri::command]
-pub fn get_playback_position(
-    state: State<'_, AudioEngineState>,
-) -> Result<f64, String> {
+pub fn get_playback_position(state: State<'_, AudioEngineState>) -> Result<f64, String> {
     let engine = state.0.lock();
     Ok(engine.playback.get_position())
 }
@@ -162,9 +155,7 @@ pub fn delete_region(
 }
 
 #[tauri::command]
-pub fn undo_edit(
-    state: State<'_, AudioEngineState>,
-) -> Result<UpdatedPeaks, String> {
+pub fn undo_edit(state: State<'_, AudioEngineState>) -> Result<UpdatedPeaks, String> {
     let mut engine = state.0.lock();
     let source = engine
         .source_samples
@@ -183,9 +174,7 @@ pub fn undo_edit(
 }
 
 #[tauri::command]
-pub fn redo_edit(
-    state: State<'_, AudioEngineState>,
-) -> Result<UpdatedPeaks, String> {
+pub fn redo_edit(state: State<'_, AudioEngineState>) -> Result<UpdatedPeaks, String> {
     let mut engine = state.0.lock();
     let source = engine
         .source_samples
@@ -212,15 +201,12 @@ pub fn apply_compression(
 ) -> Result<UpdatedPeaks, String> {
     let mut engine = state.0.lock();
 
-    let rendered = engine
-        .rendered_samples()
-        .ok_or("No audio loaded")?;
+    let rendered = engine.rendered_samples().ok_or("No audio loaded")?;
 
     let sr = engine.sample_rate;
     let ch = engine.channels;
 
-    let processed =
-        processor::compress(&rendered, ch, sr, &params);
+    let processed = processor::compress(&rendered, ch, sr, &params);
 
     let duration = rendered.len() as f64 / (ch as f64 * sr as f64);
 
@@ -232,8 +218,7 @@ pub fn apply_compression(
     });
 
     let source = engine.source_samples.as_ref().unwrap().clone();
-    let (peaks, new_duration) =
-        engine.edl.recompute_peaks(&source, ch, sr);
+    let (peaks, new_duration) = engine.edl.recompute_peaks(&source, ch, sr);
 
     Ok(UpdatedPeaks {
         peaks,
@@ -248,15 +233,12 @@ pub fn apply_noise_reduction(
 ) -> Result<UpdatedPeaks, String> {
     let mut engine = state.0.lock();
 
-    let rendered = engine
-        .rendered_samples()
-        .ok_or("No audio loaded")?;
+    let rendered = engine.rendered_samples().ok_or("No audio loaded")?;
 
     let sr = engine.sample_rate;
     let ch = engine.channels;
 
-    let processed =
-        processor::noise_reduce(&rendered, ch, sr, strength);
+    let processed = processor::noise_reduce(&rendered, ch, sr, strength);
 
     let duration = rendered.len() as f64 / (ch as f64 * sr as f64);
 
@@ -267,8 +249,7 @@ pub fn apply_noise_reduction(
     });
 
     let source = engine.source_samples.as_ref().unwrap().clone();
-    let (peaks, new_duration) =
-        engine.edl.recompute_peaks(&source, ch, sr);
+    let (peaks, new_duration) = engine.edl.recompute_peaks(&source, ch, sr);
 
     Ok(UpdatedPeaks {
         peaks,
@@ -284,9 +265,7 @@ pub fn detect_silence(
 ) -> Result<Vec<SilenceRegion>, String> {
     let engine = state.0.lock();
 
-    let rendered = engine
-        .rendered_samples()
-        .ok_or("No audio loaded")?;
+    let rendered = engine.rendered_samples().ok_or("No audio loaded")?;
 
     let sr = engine.sample_rate;
     let ch = engine.channels;
@@ -296,6 +275,21 @@ pub fn detect_silence(
         ch,
         sr,
         threshold_db,
+        min_duration_secs,
+    ))
+}
+
+#[tauri::command]
+pub fn find_quietest_region(
+    min_duration_secs: f64,
+    state: State<'_, AudioEngineState>,
+) -> Result<Option<SilenceRegion>, String> {
+    let engine = state.0.lock();
+    let samples = engine.source_samples.as_ref().ok_or("No audio loaded")?;
+    Ok(processor::find_quietest_region(
+        samples,
+        engine.channels,
+        engine.sample_rate,
         min_duration_secs,
     ))
 }
@@ -322,12 +316,10 @@ pub fn trim_silence(
             let delete_start = region.start + half_keep;
             let delete_end = region.end - half_keep;
             if delete_end > delete_start {
-                engine
-                    .edl
-                    .add_edit(EditOp::Delete {
-                        start: delete_start,
-                        end: delete_end,
-                    });
+                engine.edl.add_edit(EditOp::Delete {
+                    start: delete_start,
+                    end: delete_end,
+                });
             }
         }
     }
@@ -345,6 +337,68 @@ pub fn trim_silence(
     Ok(UpdatedPeaks { peaks, duration })
 }
 
+// ── Effect Preview ──────────────────────────────────────────────────────────
+
+/// Parameters for the `preview_effect` command, bundled to satisfy clippy's
+/// argument-count limit while remaining flat for frontend callers.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EffectPreviewParams {
+    pub effect_type: String,
+    #[serde(default)]
+    pub threshold_db: Option<f32>,
+    #[serde(default)]
+    pub ratio: Option<f32>,
+    #[serde(default)]
+    pub attack_ms: Option<f32>,
+    #[serde(default)]
+    pub release_ms: Option<f32>,
+    #[serde(default)]
+    pub makeup_gain_db: Option<f32>,
+    #[serde(default)]
+    pub strength: Option<f32>,
+}
+
+#[tauri::command]
+pub fn preview_effect(
+    params: EffectPreviewParams,
+    state: State<'_, AudioEngineState>,
+) -> Result<(), String> {
+    let mut engine = state.0.lock();
+    let rendered = engine.rendered_samples().ok_or("No audio loaded")?;
+    let channels = engine.channels;
+    let sample_rate = engine.sample_rate;
+
+    let processed = match params.effect_type.as_str() {
+        "compression" => {
+            let compression_params = CompressionParams {
+                threshold_db: params.threshold_db.unwrap_or(-20.0),
+                ratio: params.ratio.unwrap_or(4.0),
+                attack_ms: params.attack_ms.unwrap_or(10.0),
+                release_ms: params.release_ms.unwrap_or(100.0),
+                makeup_gain_db: params.makeup_gain_db.unwrap_or(0.0),
+            };
+            processor::compress(&rendered, channels, sample_rate, &compression_params)
+        }
+        "noise_reduction" => processor::noise_reduce(
+            &rendered,
+            channels,
+            sample_rate,
+            params.strength.unwrap_or(0.7),
+        ),
+        _ => return Err(format!("Unknown effect type: {}", params.effect_type)),
+    };
+
+    engine.preview_samples = Some(processed);
+    Ok(())
+}
+
+#[tauri::command]
+pub fn stop_preview(state: State<'_, AudioEngineState>) -> Result<(), String> {
+    let mut engine = state.0.lock();
+    engine.preview_samples = None;
+    Ok(())
+}
+
 // ── Metadata ────────────────────────────────────────────────────────────────
 
 #[tauri::command]
@@ -358,11 +412,7 @@ pub fn update_metadata(
     state: State<'_, AudioEngineState>,
 ) -> Result<(), String> {
     let engine = state.0.lock();
-    let path = engine
-        .file_path
-        .as_ref()
-        .ok_or("No file loaded")?
-        .clone();
+    let path = engine.file_path.as_ref().ok_or("No file loaded")?.clone();
 
     id3_util::write_tags(&path, &metadata)
 }
@@ -373,16 +423,79 @@ pub fn set_album_art(
     state: State<'_, AudioEngineState>,
 ) -> Result<ArtInfo, String> {
     let engine = state.0.lock();
-    let path = engine
-        .file_path
-        .as_ref()
-        .ok_or("No file loaded")?
-        .clone();
+    let path = engine.file_path.as_ref().ok_or("No file loaded")?.clone();
 
-    let (art_info, _meta) =
-        id3_util::set_album_art(&path, &image_path)?;
+    let (art_info, _meta) = id3_util::set_album_art(&path, &image_path)?;
 
     Ok(art_info)
+}
+
+// ── Export Preview ──────────────────────────────────────────────────────
+
+/// Parameters for the `preview_export` command. Bundled into a struct to
+/// keep the argument list tidy and satisfy clippy.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ExportPreviewParams {
+    pub bitrate: u32,
+    pub cbr: bool,
+    pub vbr_quality: Option<u32>,
+    pub sample_rate_out: u32,
+    pub mono: bool,
+    pub start: f64,
+    pub end: f64,
+}
+
+#[tauri::command]
+pub fn preview_export(
+    params: ExportPreviewParams,
+    state: State<'_, AudioEngineState>,
+) -> Result<String, String> {
+    let engine = state.0.lock();
+    let rendered = engine.rendered_samples().ok_or("No audio loaded")?;
+    let channels = engine.channels;
+    let sample_rate = engine.sample_rate;
+    let ch = channels as usize;
+
+    // Extract the requested region.
+    let start_frame = (params.start * sample_rate as f64) as usize;
+    let end_frame = (params.end * sample_rate as f64) as usize;
+    let start_idx = (start_frame * ch).min(rendered.len());
+    let end_idx = (end_frame * ch).min(rendered.len());
+    let region_samples = &rendered[start_idx..end_idx];
+
+    // Mix down to mono if requested.
+    let (final_samples, out_channels) = if params.mono && channels > 1 {
+        let mono: Vec<f32> = region_samples
+            .chunks(ch)
+            .map(|frame| frame.iter().sum::<f32>() / ch as f32)
+            .collect();
+        (mono, 1u16)
+    } else {
+        (region_samples.to_vec(), channels)
+    };
+
+    let export_params = ExportParams {
+        bitrate: params.bitrate,
+        cbr: params.cbr,
+        vbr_quality: params.vbr_quality,
+        normalize: false,
+        normalize_target_db: None,
+    };
+
+    let tmp_path = std::env::temp_dir().join("provcast_preview.mp3");
+    let out_rate = params.sample_rate_out;
+
+    exporter::export_mp3(
+        &final_samples,
+        out_channels,
+        out_rate,
+        &export_params,
+        tmp_path.to_str().ok_or("Invalid temp path")?,
+        None,
+        |_| {},
+    )?;
+
+    Ok(tmp_path.to_string_lossy().to_string())
 }
 
 // ── Export ───────────────────────────────────────────────────────────────────
@@ -410,9 +523,7 @@ pub fn export_mp3(
     let (rendered, sr, ch, metadata) = {
         let engine = state.0.lock();
 
-        let rendered = engine
-            .rendered_samples()
-            .ok_or("No audio loaded")?;
+        let rendered = engine.rendered_samples().ok_or("No audio loaded")?;
 
         let sr = engine.sample_rate;
         let ch = engine.channels;

@@ -197,8 +197,7 @@ where
         .map_err(|e| format!("flush: {e:?}"))?;
 
     // Write to disk.
-    let mut file =
-        File::create(output_path).map_err(|e| format!("create output file: {e}"))?;
+    let mut file = File::create(output_path).map_err(|e| format!("create output file: {e}"))?;
     file.write_all(&mp3_data)
         .map_err(|e| format!("write mp3 data: {e}"))?;
 
@@ -227,10 +226,7 @@ where
 
 /// Peak-normalize samples so the loudest peak hits `target_db`.
 fn normalize(samples: &[f32], target_db: f32) -> Vec<f32> {
-    let peak = samples
-        .iter()
-        .map(|s| s.abs())
-        .fold(0.0f32, f32::max);
+    let peak = samples.iter().map(|s| s.abs()).fold(0.0f32, f32::max);
 
     if peak < 1e-10 {
         return samples.to_vec();
@@ -243,4 +239,40 @@ fn normalize(samples: &[f32], target_db: f32) -> Vec<f32> {
         .iter()
         .map(|&s| (s * gain).clamp(-1.0, 1.0))
         .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_export_small_buffer() {
+        let sample_rate = 44100u32;
+        let samples: Vec<f32> = (0..44100)
+            .map(|i| {
+                0.5 * (2.0 * std::f32::consts::PI * 440.0 * i as f32 / sample_rate as f32).sin()
+            })
+            .collect();
+        let params = ExportParams {
+            bitrate: 128,
+            cbr: true,
+            vbr_quality: None,
+            normalize: false,
+            normalize_target_db: None,
+        };
+        let tmp = std::env::temp_dir().join("provcast_test_preview.mp3");
+        let result = export_mp3(
+            &samples,
+            1,
+            sample_rate,
+            &params,
+            tmp.to_str().unwrap(),
+            None,
+            |_| {},
+        );
+        assert!(result.is_ok());
+        let r = result.unwrap();
+        assert!(r.size_bytes > 0);
+        let _ = std::fs::remove_file(&tmp);
+    }
 }

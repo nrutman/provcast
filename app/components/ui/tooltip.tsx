@@ -1,22 +1,22 @@
-import * as React from "react"
+import * as React from "react";
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/cn";
 
 interface TooltipProviderProps {
-  children: React.ReactNode
-  delayDuration?: number
+  children: React.ReactNode;
+  delayDuration?: number;
 }
 
 function TooltipProvider({ children }: TooltipProviderProps) {
-  return <>{children}</>
+  return <>{children}</>;
 }
 
 interface TooltipProps {
-  children: React.ReactNode
+  children: React.ReactNode;
 }
 
 function Tooltip({ children }: TooltipProps) {
-  return <div className="relative inline-flex group">{children}</div>
+  return <div className="relative inline-flex group">{children}</div>;
 }
 
 const TooltipTrigger = React.forwardRef<
@@ -24,19 +24,21 @@ const TooltipTrigger = React.forwardRef<
   React.ButtonHTMLAttributes<HTMLButtonElement> & { asChild?: boolean }
 >(({ className, asChild, children, ...props }, ref) => {
   if (asChild && React.isValidElement(children)) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, react-hooks/refs
     return React.cloneElement(children as React.ReactElement<any>, {
       ref,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       className: cn((children as React.ReactElement<any>).props.className, className),
-    })
+    });
   }
 
   return (
     <button ref={ref} type="button" className={className} {...props}>
       {children}
     </button>
-  )
-})
-TooltipTrigger.displayName = "TooltipTrigger"
+  );
+});
+TooltipTrigger.displayName = "TooltipTrigger";
 
 const TooltipContent = React.forwardRef<
   HTMLDivElement,
@@ -51,11 +53,11 @@ const TooltipContent = React.forwardRef<
       side === "bottom" && "top-full left-1/2 mt-2 -translate-x-1/2",
       side === "left" && "right-full top-1/2 mr-2 -translate-y-1/2",
       side === "right" && "left-full top-1/2 ml-2 -translate-y-1/2",
-      className
+      className,
     )}
     {...props}
   />
-))
-TooltipContent.displayName = "TooltipContent"
+));
+TooltipContent.displayName = "TooltipContent";
 
-export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider }
+export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider };

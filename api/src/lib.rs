@@ -6,6 +6,7 @@ use audio::AudioEngineState;
 use tauri::{Emitter, Manager};
 
 #[cfg(target_os = "macos")]
+#[allow(deprecated)]
 fn set_macos_dock_icon() {
     use cocoa::appkit::{NSApp, NSApplication, NSImage};
     use cocoa::base::nil;
@@ -44,10 +45,14 @@ pub fn run() {
             commands::apply_compression,
             commands::apply_noise_reduction,
             commands::detect_silence,
+            commands::find_quietest_region,
             commands::trim_silence,
+            commands::preview_effect,
+            commands::stop_preview,
             commands::read_metadata,
             commands::update_metadata,
             commands::set_album_art,
+            commands::preview_export,
             commands::estimate_export_size,
             commands::export_mp3,
         ])

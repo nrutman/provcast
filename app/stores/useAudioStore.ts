@@ -33,6 +33,11 @@ export interface AudioState {
   undoCount: number;
   redoCount: number;
   selectedRegion: { start: number; end: number } | null;
+  previewMode: "original" | "processed" | null;
+  detectedSilenceRegions: { start: number; end: number }[];
+  deletedRegions: { start: number; end: number }[];
+  compressionApplied: boolean;
+  noiseReductionApplied: boolean;
 
   setFile: (path: string, info: AudioInfo) => void;
   clearFile: () => void;
@@ -42,6 +47,11 @@ export interface AudioState {
   updatePeaks: (peaks: number[]) => void;
   setEditCounts: (edit: number, undo: number, redo: number) => void;
   setMetadata: (metadata: Partial<Metadata>) => void;
+  setPreviewMode: (mode: "original" | "processed" | null) => void;
+  setDetectedSilenceRegions: (regions: { start: number; end: number }[]) => void;
+  addDeletedRegion: (region: { start: number; end: number }) => void;
+  setCompressionApplied: (applied: boolean) => void;
+  setNoiseReductionApplied: (applied: boolean) => void;
 }
 
 const defaultMetadata: Metadata = {
@@ -70,6 +80,11 @@ export const useAudioStore = create<AudioState>()(
       undoCount: 0,
       redoCount: 0,
       selectedRegion: null,
+      previewMode: null,
+      detectedSilenceRegions: [],
+      deletedRegions: [],
+      compressionApplied: false,
+      noiseReductionApplied: false,
 
       setFile: (path, info) =>
         set({
@@ -81,6 +96,11 @@ export const useAudioStore = create<AudioState>()(
           undoCount: 0,
           redoCount: 0,
           selectedRegion: null,
+          previewMode: null,
+          detectedSilenceRegions: [],
+          deletedRegions: [],
+          compressionApplied: false,
+          noiseReductionApplied: false,
         }),
 
       clearFile: () =>
@@ -94,6 +114,11 @@ export const useAudioStore = create<AudioState>()(
           undoCount: 0,
           redoCount: 0,
           selectedRegion: null,
+          previewMode: null,
+          detectedSilenceRegions: [],
+          deletedRegions: [],
+          compressionApplied: false,
+          noiseReductionApplied: false,
         }),
 
       setPlaying: (playing) => set({ isPlaying: playing }),
@@ -114,6 +139,19 @@ export const useAudioStore = create<AudioState>()(
         set((state) => ({
           metadata: { ...state.metadata, ...metadata },
         })),
+
+      setPreviewMode: (mode) => set({ previewMode: mode }),
+
+      setDetectedSilenceRegions: (regions) => set({ detectedSilenceRegions: regions }),
+
+      addDeletedRegion: (region) =>
+        set((state) => ({
+          deletedRegions: [...state.deletedRegions, region],
+        })),
+
+      setCompressionApplied: (applied) => set({ compressionApplied: applied }),
+
+      setNoiseReductionApplied: (applied) => set({ noiseReductionApplied: applied }),
     }),
     {
       limit: 100,

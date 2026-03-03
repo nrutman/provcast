@@ -24,6 +24,8 @@ pub struct AudioEngine {
     pub edl: EditDecisionList,
     /// Playback state (stream, sink, position).
     pub playback: PlaybackState,
+    /// Temporary preview buffer for A/B comparison (not part of the EDL).
+    pub preview_samples: Option<Vec<f32>>,
 }
 
 impl Default for AudioEngine {
@@ -36,6 +38,7 @@ impl Default for AudioEngine {
             file_path: None,
             edl: EditDecisionList::new(),
             playback: PlaybackState::default(),
+            preview_samples: None,
         }
     }
 }
@@ -47,10 +50,9 @@ impl AudioEngine {
 
     /// Return the rendered (edited) samples by applying the EDL to the source.
     pub fn rendered_samples(&self) -> Option<Vec<f32>> {
-        self.source_samples.as_ref().map(|src| {
-            self.edl
-                .apply_edits(src, self.channels, self.sample_rate)
-        })
+        self.source_samples
+            .as_ref()
+            .map(|src| self.edl.apply_edits(src, self.channels, self.sample_rate))
     }
 
     /// Duration in seconds of the source audio.
@@ -79,6 +81,12 @@ unsafe impl Send for AudioEngine {}
 
 /// Wrapper used as Tauri managed state.
 pub struct AudioEngineState(pub Mutex<AudioEngine>);
+
+impl Default for AudioEngineState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl AudioEngineState {
     pub fn new() -> Self {

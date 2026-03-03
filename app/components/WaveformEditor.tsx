@@ -1,18 +1,22 @@
-import { useRef, useCallback, useEffect } from "react";
+import { useRef, useEffect } from "react";
 import { useWavesurfer } from "@wavesurfer/react";
 import RegionsPlugin from "wavesurfer.js/dist/plugins/regions.js";
 import MinimapPlugin from "wavesurfer.js/dist/plugins/minimap.js";
 import TimelinePlugin from "wavesurfer.js/dist/plugins/timeline.js";
-import { useAudioStore } from "@/stores/audio-store";
-import { useUIStore } from "@/stores/ui-store";
-import { seekAudio } from "@/hooks/use-tauri-audio";
+import type WaveSurfer from "wavesurfer.js";
+import { useAudioStore } from "@/stores/useAudioStore";
+import { useUIStore } from "@/stores/useUIStore";
+import { seekAudio } from "@/hooks/tauri/playback";
 
 export function WaveformEditor() {
   const containerRef = useRef<HTMLDivElement>(null);
   const audioInfo = useAudioStore((s) => s.audioInfo);
   const playbackPosition = useAudioStore((s) => s.playbackPosition);
   const setSelectedRegion = useAudioStore((s) => s.setSelectedRegion);
+  const deletedRegions = useAudioStore((s) => s.deletedRegions);
+  const detectedSilenceRegions = useAudioStore((s) => s.detectedSilenceRegions);
   const zoom = useUIStore((s) => s.zoom);
+  const currentStep = useUIStore((s) => s.currentStep);
 
   const { wavesurfer } = useWavesurfer({
     container: containerRef,
@@ -67,20 +71,24 @@ export function WaveformEditor() {
   useEffect(() => {
     if (!wavesurfer) return;
 
-    const regions = wavesurfer.getActivePlugins().find(
-      (p): p is RegionsPlugin => p instanceof RegionsPlugin,
-    );
+    const regions = getRegionsPlugin(wavesurfer);
     if (!regions) return;
 
     let isCreating = false;
 
     const unsub = regions.on("region-created", (region) => {
       if (isCreating) return;
+      // Don't interfere with overlay regions
+      if (region.id.startsWith("deleted-") || region.id.startsWith("context-")) {
+        return;
+      }
       isCreating = true;
 
-      // Remove previous regions
+      // Remove previous selection regions only (not overlays)
       regions.getRegions().forEach((r) => {
-        if (r.id !== region.id) r.remove();
+        if (r.id !== region.id && !r.id.startsWith("deleted-") && !r.id.startsWith("context-")) {
+          r.remove();
+        }
       });
 
       setSelectedRegion({ start: region.start, end: region.end });
@@ -88,6 +96,10 @@ export function WaveformEditor() {
     });
 
     const unsubUpdate = regions.on("region-updated", (region) => {
+      // Only update selection for user-created regions
+      if (region.id.startsWith("deleted-") || region.id.startsWith("context-")) {
+        return;
+      }
       setSelectedRegion({ start: region.start, end: region.end });
     });
 
@@ -96,6 +108,56 @@ export function WaveformEditor() {
       unsubUpdate();
     };
   }, [wavesurfer, setSelectedRegion]);
+
+  // Render deleted region overlays (gray, non-interactive)
+  useEffect(() => {
+    if (!wavesurfer) return;
+    const regions = getRegionsPlugin(wavesurfer);
+    if (!regions) return;
+
+    // Clear old deleted overlays
+    regions.getRegions().forEach((r) => {
+      if (r.id.startsWith("deleted-")) r.remove();
+    });
+
+    // Add current deleted regions
+    deletedRegions.forEach((region, i) => {
+      regions.addRegion({
+        id: `deleted-${i}`,
+        start: region.start,
+        end: region.end,
+        color: "rgba(128, 128, 128, 0.3)",
+        drag: false,
+        resize: false,
+      });
+    });
+  }, [wavesurfer, deletedRegions]);
+
+  // Render context-specific overlays based on wizard step
+  useEffect(() => {
+    if (!wavesurfer) return;
+    const regions = getRegionsPlugin(wavesurfer);
+    if (!regions) return;
+
+    // Clear old context overlays
+    regions.getRegions().forEach((r) => {
+      if (r.id.startsWith("context-")) r.remove();
+    });
+
+    // Step 3 (Trimming): Show detected silence regions in orange
+    if (currentStep === 3 && detectedSilenceRegions.length > 0) {
+      detectedSilenceRegions.forEach((region, i) => {
+        regions.addRegion({
+          id: `context-${i}`,
+          start: region.start,
+          end: region.end,
+          color: "rgba(255, 165, 0, 0.25)",
+          drag: false,
+          resize: false,
+        });
+      });
+    }
+  }, [wavesurfer, currentStep, detectedSilenceRegions]);
 
   // Click to seek via Rust backend
   useEffect(() => {
@@ -117,10 +179,11 @@ export function WaveformEditor() {
 
   return (
     <div className="flex-1 overflow-hidden p-4">
-      <div
-        ref={containerRef}
-        className="rounded-md border border-border bg-background"
-      />
+      <div ref={containerRef} className="rounded-md border border-border bg-background" />
     </div>
   );
+}
+
+function getRegionsPlugin(ws: WaveSurfer): RegionsPlugin | null {
+  return ws.getActivePlugins().find((p): p is RegionsPlugin => p instanceof RegionsPlugin) ?? null;
 }

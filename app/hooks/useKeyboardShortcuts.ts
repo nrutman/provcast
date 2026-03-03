@@ -1,16 +1,8 @@
 import { useEffect } from "react";
-import { open } from "@tauri-apps/plugin-dialog";
-import { useAudioStore } from "@/stores/audio-store";
-import { useUIStore } from "@/stores/ui-store";
-import {
-  loadAudio,
-  playAudio,
-  pauseAudio,
-  stopAudio,
-  deleteRegion,
-  undoEdit,
-  redoEdit,
-} from "./use-tauri-audio";
+import { useAudioStore } from "@/stores/useAudioStore";
+import { useUIStore } from "@/stores/useUIStore";
+import { playAudio, pauseAudio, stopAudio } from "./tauri/playback";
+import { deleteRegion, undoEdit, redoEdit } from "./tauri/editing";
 
 export function useKeyboardShortcuts() {
   const store = useAudioStore.getState;
@@ -18,24 +10,6 @@ export function useKeyboardShortcuts() {
   useEffect(() => {
     async function handleKeyDown(e: KeyboardEvent) {
       const ctrl = e.ctrlKey || e.metaKey;
-
-      // Ctrl+O: Open file
-      if (ctrl && e.key === "o") {
-        e.preventDefault();
-        const path = await open({
-          multiple: false,
-          filters: [
-            {
-              name: "Audio Files",
-              extensions: ["mp3", "wav", "aiff", "aif", "flac", "ogg", "m4a"],
-            },
-          ],
-        });
-        if (path) {
-          const info = await loadAudio(path);
-          useAudioStore.getState().setFile(path, info);
-        }
-      }
 
       // Space: Play/Pause
       if (e.key === " " && !isInputFocused()) {
@@ -88,12 +62,6 @@ export function useKeyboardShortcuts() {
       if (ctrl && e.key === "-") {
         e.preventDefault();
         useUIStore.getState().zoomOut();
-      }
-
-      // Ctrl+E: Export
-      if (ctrl && e.key === "e") {
-        e.preventDefault();
-        useUIStore.getState().setExportDialogOpen(true);
       }
     }
 

@@ -33,6 +33,12 @@ Provcast is a desktop audio editor for podcast publishing, built with Tauri v2 (
 - Use `@/` path alias for imports from `app/`
 - shadcn/ui components live in `app/components/ui/`
 - State management via Zustand stores in `app/stores/`
-- All Tauri command wrappers in `app/hooks/use-tauri-audio.ts`
+- Tauri command wrappers in `app/hooks/tauri/` grouped by domain
 - Rust error handling: return `Result<T, String>` from commands
 - Use `parking_lot::Mutex` for Rust state synchronization
+- See `CONTRIBUTING.md` for full style guide, code ordering rules, and testing standards
+
+## Testing
+- Every time tests are added or updated, evaluate: (1) missing high-value cases, (2) simplification opportunities, (3) low-value cases to remove
+- Test behavior, not implementation details — click buttons, verify outcomes
+- See the "Testing" section in `CONTRIBUTING.md` for the full checklist

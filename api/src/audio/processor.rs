@@ -101,12 +101,7 @@ pub fn compress(
 /// nnnoiseless requires 48 kHz mono input in frames of 480 samples.
 /// We resample if needed, process each channel independently, then
 /// resample back.
-pub fn noise_reduce(
-    samples: &[f32],
-    channels: u16,
-    sample_rate: u32,
-    strength: f32,
-) -> Vec<f32> {
+pub fn noise_reduce(samples: &[f32], channels: u16, sample_rate: u32, strength: f32) -> Vec<f32> {
     let ch = channels as usize;
     if samples.is_empty() || ch == 0 {
         return samples.to_vec();
@@ -117,17 +112,12 @@ pub fn noise_reduce(
     // De-interleave into per-channel vectors.
     let total_frames = samples.len() / ch;
     let mut channel_data: Vec<Vec<f32>> = (0..ch)
-        .map(|c| {
-            (0..total_frames)
-                .map(|f| samples[f * ch + c])
-                .collect()
-        })
+        .map(|c| (0..total_frames).map(|f| samples[f * ch + c]).collect())
         .collect();
 
     // Process each channel independently.
     for ch_samples in &mut channel_data {
-        *ch_samples =
-            denoise_mono_channel(ch_samples, sample_rate, strength);
+        *ch_samples = denoise_mono_channel(ch_samples, sample_rate, strength);
     }
 
     // Re-interleave.
@@ -212,8 +202,8 @@ fn resample_mono(input: &[f32], from_sr: u32, to_sr: u32) -> Vec<f32> {
         from_sr as usize,
         to_sr as usize,
         chunk_size,
-        2,  // sub-chunks
-        1,  // 1 channel
+        2, // sub-chunks
+        1, // 1 channel
     )
     .expect("Failed to create resampler");
 
@@ -243,8 +233,7 @@ fn resample_mono(input: &[f32], from_sr: u32, to_sr: u32) -> Vec<f32> {
     }
 
     // Trim to the expected length.
-    let expected_len =
-        (input.len() as f64 * to_sr as f64 / from_sr as f64).round() as usize;
+    let expected_len = (input.len() as f64 * to_sr as f64 / from_sr as f64).round() as usize;
     output.truncate(expected_len);
 
     output
@@ -329,8 +318,241 @@ pub fn detect_silence(
     regions
 }
 
+// ── Quietest Region Detection ───────────────────────────────────────────────
+
+/// Find the quietest region in the audio of at least `min_duration_secs` length.
+/// Uses RMS analysis with a sliding window. Returns the region with the lowest
+/// average RMS, or None if the audio is too short.
+pub fn find_quietest_region(
+    samples: &[f32],
+    channels: u16,
+    sample_rate: u32,
+    min_duration_secs: f64,
+) -> Option<SilenceRegion> {
+    let ch = channels as usize;
+    if ch == 0 || sample_rate == 0 {
+        return None;
+    }
+    let total_frames = samples.len() / ch;
+    let window_frames = (min_duration_secs * sample_rate as f64) as usize;
+    if total_frames < window_frames || window_frames == 0 {
+        return None;
+    }
+
+    // Compute per-frame RMS (mix down to mono)
+    let frame_rms: Vec<f32> = (0..total_frames)
+        .map(|f| {
+            let start = f * ch;
+            let sum: f32 = (0..ch)
+                .map(|c| {
+                    let s = samples[start + c];
+                    s * s
+                })
+                .sum();
+            (sum / ch as f32).sqrt()
+        })
+        .collect();
+
+    // Sliding window to find the quietest region
+    let mut best_start = 0usize;
+    let mut best_rms = f64::MAX;
+
+    let mut window_sum: f64 = frame_rms[..window_frames].iter().map(|&v| v as f64).sum();
+    let avg = window_sum / window_frames as f64;
+    if avg < best_rms {
+        best_rms = avg;
+        best_start = 0;
+    }
+
+    for i in 1..=(total_frames - window_frames) {
+        window_sum -= frame_rms[i - 1] as f64;
+        window_sum += frame_rms[i + window_frames - 1] as f64;
+        let avg = window_sum / window_frames as f64;
+        if avg < best_rms {
+            best_rms = avg;
+            best_start = i;
+        }
+    }
+
+    Some(SilenceRegion {
+        start: best_start as f64 / sample_rate as f64,
+        end: (best_start + window_frames) as f64 / sample_rate as f64,
+    })
+}
+
 // ── Utility ─────────────────────────────────────────────────────────────────
 
 fn db_to_linear(db: f32) -> f32 {
     10.0_f32.powf(db / 20.0)
+}
+
+// ── Tests ───────────────────────────────────────────────────────────────────
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn sine_wave(freq: f32, duration_secs: f32, sample_rate: u32) -> Vec<f32> {
+        (0..((duration_secs * sample_rate as f32) as usize))
+            .map(|i| {
+                0.5 * (2.0 * std::f32::consts::PI * freq * i as f32 / sample_rate as f32).sin()
+            })
+            .collect()
+    }
+
+    #[test]
+    fn test_find_quietest_region_finds_quiet_section() {
+        let sample_rate = 44100u32;
+        let mut samples = Vec::new();
+        // 0-1s: loud sine
+        samples.extend(sine_wave(440.0, 1.0, sample_rate));
+        // 1-2s: near silence
+        samples.extend(vec![0.001f32; sample_rate as usize]);
+        // 2-3s: loud sine again
+        samples.extend(sine_wave(440.0, 1.0, sample_rate));
+
+        let region = find_quietest_region(&samples, 1, sample_rate, 0.5);
+        assert!(region.is_some());
+        let r = region.unwrap();
+        assert!(r.start >= 0.5 && r.start <= 1.51, "start was {}", r.start);
+        assert!(r.end >= 1.5 && r.end <= 2.51, "end was {}", r.end);
+    }
+
+    #[test]
+    fn test_find_quietest_region_returns_something_for_all_loud() {
+        let sample_rate = 44100u32;
+        let samples = sine_wave(440.0, 2.0, sample_rate);
+        let region = find_quietest_region(&samples, 1, sample_rate, 0.5);
+        assert!(region.is_some());
+    }
+
+    #[test]
+    fn test_find_quietest_region_none_for_short_audio() {
+        let samples = vec![0.1f32; 100];
+        let region = find_quietest_region(&samples, 1, 44100, 1.0);
+        assert!(region.is_none());
+    }
+
+    #[test]
+    fn test_find_quietest_region_none_for_empty() {
+        let region = find_quietest_region(&[], 1, 44100, 0.5);
+        assert!(region.is_none());
+    }
+
+    // ── Compression tests ───────────────────────────────────────────────────
+
+    #[test]
+    fn test_compress_reduces_dynamic_range() {
+        let sample_rate = 44100u32;
+        // A loud sine wave with amplitude 0.5 (peak ~0.5)
+        let samples = sine_wave(440.0, 0.5, sample_rate);
+
+        let params = CompressionParams {
+            threshold_db: -12.0,
+            ratio: 4.0,
+            attack_ms: 5.0,
+            release_ms: 50.0,
+            makeup_gain_db: 0.0, // No makeup gain
+        };
+
+        let compressed = compress(&samples, 1, sample_rate, &params);
+        assert_eq!(compressed.len(), samples.len());
+
+        // The peak of the compressed signal should be lower than the original.
+        let original_peak = samples.iter().map(|s| s.abs()).fold(0.0f32, f32::max);
+        let compressed_peak = compressed.iter().map(|s| s.abs()).fold(0.0f32, f32::max);
+        assert!(
+            compressed_peak < original_peak,
+            "compressed peak ({}) should be less than original peak ({})",
+            compressed_peak,
+            original_peak
+        );
+    }
+
+    #[test]
+    fn test_compress_with_makeup_gain() {
+        let sample_rate = 44100u32;
+        let samples = sine_wave(440.0, 0.5, sample_rate);
+
+        let params = CompressionParams {
+            threshold_db: -12.0,
+            ratio: 4.0,
+            attack_ms: 5.0,
+            release_ms: 50.0,
+            makeup_gain_db: 6.0,
+        };
+
+        let compressed = compress(&samples, 1, sample_rate, &params);
+        assert_eq!(compressed.len(), samples.len());
+
+        // Output should not be all zeros.
+        let has_nonzero = compressed.iter().any(|&s| s.abs() > 1e-6);
+        assert!(
+            has_nonzero,
+            "compressed output with makeup gain should not be all zeros"
+        );
+    }
+
+    #[test]
+    fn test_compress_empty_input() {
+        let params = CompressionParams {
+            threshold_db: -20.0,
+            ratio: 4.0,
+            attack_ms: 5.0,
+            release_ms: 50.0,
+            makeup_gain_db: 0.0,
+        };
+        let result = compress(&[], 1, 44100, &params);
+        assert!(result.is_empty());
+    }
+
+    // ── Silence detection tests ─────────────────────────────────────────────
+
+    #[test]
+    fn test_detect_silence_finds_gaps() {
+        let sample_rate = 44100u32;
+        let mut samples = Vec::new();
+
+        // 0-1s: loud sine
+        samples.extend(sine_wave(440.0, 1.0, sample_rate));
+        // 1-2s: silence
+        samples.extend(vec![0.0f32; sample_rate as usize]);
+        // 2-3s: loud sine again
+        samples.extend(sine_wave(440.0, 1.0, sample_rate));
+
+        let regions = detect_silence(&samples, 1, sample_rate, -40.0, 0.5);
+        assert!(
+            !regions.is_empty(),
+            "should detect at least one silence region"
+        );
+
+        // The detected region should overlap with the 1-2s gap.
+        let r = &regions[0];
+        assert!(
+            r.start < 2.0 && r.end > 1.0,
+            "silence region ({}-{}) should overlap with 1-2s gap",
+            r.start,
+            r.end
+        );
+    }
+
+    #[test]
+    fn test_detect_silence_no_gaps() {
+        let sample_rate = 44100u32;
+        // 2 seconds of loud sine — no silence
+        let samples = sine_wave(440.0, 2.0, sample_rate);
+
+        let regions = detect_silence(&samples, 1, sample_rate, -40.0, 0.5);
+        assert!(
+            regions.is_empty(),
+            "should not detect silence in an all-loud signal, found {} regions",
+            regions.len()
+        );
+    }
+
+    #[test]
+    fn test_detect_silence_empty() {
+        let regions = detect_silence(&[], 1, 44100, -40.0, 0.5);
+        assert!(regions.is_empty());
+    }
 }
