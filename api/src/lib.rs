@@ -52,6 +52,7 @@ pub fn run() {
             commands::read_metadata,
             commands::update_metadata,
             commands::set_album_art,
+            commands::preview_export,
             commands::estimate_export_size,
             commands::export_mp3,
         ])

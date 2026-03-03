@@ -430,6 +430,74 @@ pub fn set_album_art(
     Ok(art_info)
 }
 
+// ── Export Preview ──────────────────────────────────────────────────────
+
+/// Parameters for the `preview_export` command. Bundled into a struct to
+/// keep the argument list tidy and satisfy clippy.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ExportPreviewParams {
+    pub bitrate: u32,
+    pub cbr: bool,
+    pub vbr_quality: Option<u32>,
+    pub sample_rate_out: u32,
+    pub mono: bool,
+    pub start: f64,
+    pub end: f64,
+}
+
+#[tauri::command]
+pub fn preview_export(
+    params: ExportPreviewParams,
+    state: State<'_, AudioEngineState>,
+) -> Result<String, String> {
+    let engine = state.0.lock();
+    let rendered = engine.rendered_samples().ok_or("No audio loaded")?;
+    let channels = engine.channels;
+    let sample_rate = engine.sample_rate;
+    let ch = channels as usize;
+
+    // Extract the requested region.
+    let start_frame = (params.start * sample_rate as f64) as usize;
+    let end_frame = (params.end * sample_rate as f64) as usize;
+    let start_idx = (start_frame * ch).min(rendered.len());
+    let end_idx = (end_frame * ch).min(rendered.len());
+    let region_samples = &rendered[start_idx..end_idx];
+
+    // Mix down to mono if requested.
+    let (final_samples, out_channels) = if params.mono && channels > 1 {
+        let mono: Vec<f32> = region_samples
+            .chunks(ch)
+            .map(|frame| frame.iter().sum::<f32>() / ch as f32)
+            .collect();
+        (mono, 1u16)
+    } else {
+        (region_samples.to_vec(), channels)
+    };
+
+    let export_params = ExportParams {
+        bitrate: params.bitrate,
+        cbr: params.cbr,
+        vbr_quality: params.vbr_quality,
+        normalize: false,
+        normalize_target_db: None,
+    };
+
+    let tmp_path = std::env::temp_dir().join("provcast_preview.mp3");
+    let out_rate = params.sample_rate_out;
+
+    exporter::export_mp3(
+        &final_samples,
+        out_channels,
+        out_rate,
+        &export_params,
+        tmp_path.to_str().ok_or("Invalid temp path")?,
+        None,
+        |_| {},
+    )?;
+
+    Ok(tmp_path.to_string_lossy().to_string())
+}
+
 // ── Export ───────────────────────────────────────────────────────────────────
 
 #[tauri::command]
