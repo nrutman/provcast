@@ -9,6 +9,7 @@ import { TrimmingStep } from "@/components/steps/trimming-step";
 import { MetadataStep } from "@/components/steps/metadata-step";
 import { ExportStep } from "@/components/steps/export-step";
 import { useUIStore, type WizardStep } from "@/stores/ui-store";
+import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 
 export const Route = createFileRoute("/")({
   component: EditorView,
@@ -23,6 +24,8 @@ const stepComponents: Record<WizardStep, () => JSX.Element> = {
 };
 
 function EditorView() {
+  useKeyboardShortcuts();
+
   const currentStep = useUIStore((s) => s.currentStep);
   const setCurrentStep = useUIStore((s) => s.setCurrentStep);
   const fileLoaded = useUIStore((s) => s.fileLoaded);
