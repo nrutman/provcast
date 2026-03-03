@@ -77,15 +77,26 @@ pub fn load_audio(path: String, state: State<'_, AudioEngineState>) -> Result<Au
 // ── Playback ────────────────────────────────────────────────────────────────
 
 #[tauri::command]
-pub fn play_audio(from_position: f64, state: State<'_, AudioEngineState>) -> Result<(), String> {
+pub fn play_audio(
+    from_position: f64,
+    use_preview: Option<bool>,
+    state: State<'_, AudioEngineState>,
+) -> Result<(), String> {
     let mut engine = state.0.lock();
 
-    let rendered = engine.rendered_samples().ok_or("No audio loaded")?;
+    let samples = if use_preview.unwrap_or(false) {
+        engine
+            .preview_samples
+            .clone()
+            .ok_or("No preview available")?
+    } else {
+        engine.rendered_samples().ok_or("No audio loaded")?
+    };
 
     let sr = engine.sample_rate;
     let ch = engine.channels;
 
-    engine.playback.play(&rendered, sr, ch, from_position)
+    engine.playback.play(&samples, sr, ch, from_position)
 }
 
 #[tauri::command]
@@ -324,6 +335,68 @@ pub fn trim_silence(
     let (peaks, duration) = engine.edl.recompute_peaks(&source, ch, sr);
 
     Ok(UpdatedPeaks { peaks, duration })
+}
+
+// ── Effect Preview ──────────────────────────────────────────────────────────
+
+/// Parameters for the `preview_effect` command, bundled to satisfy clippy's
+/// argument-count limit while remaining flat for frontend callers.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EffectPreviewParams {
+    pub effect_type: String,
+    #[serde(default)]
+    pub threshold_db: Option<f32>,
+    #[serde(default)]
+    pub ratio: Option<f32>,
+    #[serde(default)]
+    pub attack_ms: Option<f32>,
+    #[serde(default)]
+    pub release_ms: Option<f32>,
+    #[serde(default)]
+    pub makeup_gain_db: Option<f32>,
+    #[serde(default)]
+    pub strength: Option<f32>,
+}
+
+#[tauri::command]
+pub fn preview_effect(
+    params: EffectPreviewParams,
+    state: State<'_, AudioEngineState>,
+) -> Result<(), String> {
+    let mut engine = state.0.lock();
+    let rendered = engine.rendered_samples().ok_or("No audio loaded")?;
+    let channels = engine.channels;
+    let sample_rate = engine.sample_rate;
+
+    let processed = match params.effect_type.as_str() {
+        "compression" => {
+            let compression_params = CompressionParams {
+                threshold_db: params.threshold_db.unwrap_or(-20.0),
+                ratio: params.ratio.unwrap_or(4.0),
+                attack_ms: params.attack_ms.unwrap_or(10.0),
+                release_ms: params.release_ms.unwrap_or(100.0),
+                makeup_gain_db: params.makeup_gain_db.unwrap_or(0.0),
+            };
+            processor::compress(&rendered, channels, sample_rate, &compression_params)
+        }
+        "noise_reduction" => processor::noise_reduce(
+            &rendered,
+            channels,
+            sample_rate,
+            params.strength.unwrap_or(0.7),
+        ),
+        _ => return Err(format!("Unknown effect type: {}", params.effect_type)),
+    };
+
+    engine.preview_samples = Some(processed);
+    Ok(())
+}
+
+#[tauri::command]
+pub fn stop_preview(state: State<'_, AudioEngineState>) -> Result<(), String> {
+    let mut engine = state.0.lock();
+    engine.preview_samples = None;
+    Ok(())
 }
 
 // ── Metadata ────────────────────────────────────────────────────────────────

@@ -24,6 +24,8 @@ pub struct AudioEngine {
     pub edl: EditDecisionList,
     /// Playback state (stream, sink, position).
     pub playback: PlaybackState,
+    /// Temporary preview buffer for A/B comparison (not part of the EDL).
+    pub preview_samples: Option<Vec<f32>>,
 }
 
 impl Default for AudioEngine {
@@ -36,6 +38,7 @@ impl Default for AudioEngine {
             file_path: None,
             edl: EditDecisionList::new(),
             playback: PlaybackState::default(),
+            preview_samples: None,
         }
     }
 }

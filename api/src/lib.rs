@@ -47,6 +47,8 @@ pub fn run() {
             commands::detect_silence,
             commands::find_quietest_region,
             commands::trim_silence,
+            commands::preview_effect,
+            commands::stop_preview,
             commands::read_metadata,
             commands::update_metadata,
             commands::set_album_art,
