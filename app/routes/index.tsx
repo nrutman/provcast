@@ -1,40 +1,49 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { WizardLayout } from "@/components/wizard/wizard-layout";
+import { StepSidebar } from "@/components/wizard/step-sidebar";
 import { WaveformEditor } from "@/components/waveform-editor";
 import { AudioControls } from "@/components/audio-controls";
-import { ProcessingPanel } from "@/components/processing-panel";
-import { MetadataEditor } from "@/components/metadata-editor";
-import { useAudioStore } from "@/stores/audio-store";
+import { FileSelectStep } from "@/components/steps/file-select-step";
+import { NormalizationStep } from "@/components/steps/normalization-step";
+import { TrimmingStep } from "@/components/steps/trimming-step";
+import { MetadataStep } from "@/components/steps/metadata-step";
+import { ExportStep } from "@/components/steps/export-step";
+import { useUIStore, type WizardStep } from "@/stores/ui-store";
 
 export const Route = createFileRoute("/")({
   component: EditorView,
 });
 
-function EditorView() {
-  const hasFile = useAudioStore((s) => s.filePath !== null);
+const stepComponents: Record<WizardStep, () => JSX.Element> = {
+  1: FileSelectStep,
+  2: NormalizationStep,
+  3: TrimmingStep,
+  4: MetadataStep,
+  5: ExportStep,
+};
 
-  if (!hasFile) {
-    return (
-      <div className="flex flex-1 items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-semibold text-muted-foreground">No file loaded</h2>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Open an audio file to get started (Ctrl+O)
-          </p>
-        </div>
-      </div>
-    );
-  }
+function EditorView() {
+  const currentStep = useUIStore((s) => s.currentStep);
+  const setCurrentStep = useUIStore((s) => s.setCurrentStep);
+  const fileLoaded = useUIStore((s) => s.fileLoaded);
+
+  const StepContent = stepComponents[currentStep];
 
   return (
-    <div className="flex flex-1 overflow-hidden">
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <WaveformEditor />
-        <AudioControls />
-      </div>
-      <div className="w-80 overflow-y-auto border-l border-border">
-        <ProcessingPanel />
-        <MetadataEditor />
-      </div>
-    </div>
+    <WizardLayout
+      waveform={fileLoaded ? <WaveformEditor /> : <div className="flex-1" />}
+      controls={fileLoaded ? <AudioControls /> : <div />}
+    >
+      {fileLoaded ? (
+        <div className="flex h-full">
+          <StepSidebar currentStep={currentStep} onStepClick={setCurrentStep} />
+          <div className="flex-1 min-h-0 overflow-y-auto p-4">
+            <StepContent />
+          </div>
+        </div>
+      ) : (
+        <FileSelectStep />
+      )}
+    </WizardLayout>
   );
 }
