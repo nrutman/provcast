@@ -6,26 +6,13 @@ describe("Audio Store", () => {
     useAudioStore.setState(useAudioStore.getInitialState());
   });
 
-  it("initializes with no file", () => {
+  it("initializes with default values", () => {
     const state = useAudioStore.getState();
     expect(state.filePath).toBeNull();
     expect(state.audioInfo).toBeNull();
-  });
-
-  it("initializes preview mode as null", () => {
-    expect(useAudioStore.getState().previewMode).toBeNull();
-  });
-
-  it("initializes with empty silence regions", () => {
-    expect(useAudioStore.getState().detectedSilenceRegions).toEqual([]);
-  });
-
-  it("initializes with empty deleted regions", () => {
-    expect(useAudioStore.getState().deletedRegions).toEqual([]);
-  });
-
-  it("initializes compression and noise reduction as not applied", () => {
-    const state = useAudioStore.getState();
+    expect(state.previewMode).toBeNull();
+    expect(state.detectedSilenceRegions).toEqual([]);
+    expect(state.deletedRegions).toEqual([]);
     expect(state.compressionApplied).toBe(false);
     expect(state.noiseReductionApplied).toBe(false);
   });
@@ -67,21 +54,6 @@ describe("Audio Store", () => {
     expect(useAudioStore.getState().noiseReductionApplied).toBe(true);
   });
 
-  it("clearFile resets new fields too", () => {
-    useAudioStore.getState().setPreviewMode("processed");
-    useAudioStore.getState().setDetectedSilenceRegions([{ start: 1, end: 2 }]);
-    useAudioStore.getState().addDeletedRegion({ start: 3, end: 4 });
-    useAudioStore.getState().setCompressionApplied(true);
-    useAudioStore.getState().setNoiseReductionApplied(true);
-    useAudioStore.getState().clearFile();
-    const state = useAudioStore.getState();
-    expect(state.previewMode).toBeNull();
-    expect(state.detectedSilenceRegions).toEqual([]);
-    expect(state.deletedRegions).toEqual([]);
-    expect(state.compressionApplied).toBe(false);
-    expect(state.noiseReductionApplied).toBe(false);
-  });
-
   it("setFile resets deletedRegions", () => {
     useAudioStore.getState().addDeletedRegion({ start: 1, end: 2 });
     useAudioStore.getState().setFile("/test.wav", {
@@ -92,5 +64,32 @@ describe("Audio Store", () => {
       peaks: [0.1, 0.2],
     });
     expect(useAudioStore.getState().deletedRegions).toEqual([]);
+  });
+
+  it("clearFile resets all fields to defaults", () => {
+    // Set up dirty state across all fields
+    useAudioStore.getState().setFile("/test.wav", {
+      duration: 10,
+      sampleRate: 44100,
+      channels: 2,
+      format: "wav",
+      peaks: [0.1, 0.2],
+    });
+    useAudioStore.getState().setPreviewMode("processed");
+    useAudioStore.getState().setDetectedSilenceRegions([{ start: 1, end: 2 }]);
+    useAudioStore.getState().addDeletedRegion({ start: 3, end: 4 });
+    useAudioStore.getState().setCompressionApplied(true);
+    useAudioStore.getState().setNoiseReductionApplied(true);
+
+    useAudioStore.getState().clearFile();
+
+    const state = useAudioStore.getState();
+    expect(state.filePath).toBeNull();
+    expect(state.audioInfo).toBeNull();
+    expect(state.previewMode).toBeNull();
+    expect(state.detectedSilenceRegions).toEqual([]);
+    expect(state.deletedRegions).toEqual([]);
+    expect(state.compressionApplied).toBe(false);
+    expect(state.noiseReductionApplied).toBe(false);
   });
 });
