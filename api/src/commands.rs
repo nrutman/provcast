@@ -269,6 +269,21 @@ pub fn detect_silence(
 }
 
 #[tauri::command]
+pub fn find_quietest_region(
+    min_duration_secs: f64,
+    state: State<'_, AudioEngineState>,
+) -> Result<Option<SilenceRegion>, String> {
+    let engine = state.0.lock();
+    let samples = engine.source_samples.as_ref().ok_or("No audio loaded")?;
+    Ok(processor::find_quietest_region(
+        samples,
+        engine.channels,
+        engine.sample_rate,
+        min_duration_secs,
+    ))
+}
+
+#[tauri::command]
 pub fn trim_silence(
     regions: Vec<SilenceRegion>,
     keep_duration: f32,

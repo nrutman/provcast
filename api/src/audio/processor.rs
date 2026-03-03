@@ -318,8 +318,124 @@ pub fn detect_silence(
     regions
 }
 
+// ── Quietest Region Detection ───────────────────────────────────────────────
+
+/// Find the quietest region in the audio of at least `min_duration_secs` length.
+/// Uses RMS analysis with a sliding window. Returns the region with the lowest
+/// average RMS, or None if the audio is too short.
+pub fn find_quietest_region(
+    samples: &[f32],
+    channels: u16,
+    sample_rate: u32,
+    min_duration_secs: f64,
+) -> Option<SilenceRegion> {
+    let ch = channels as usize;
+    if ch == 0 || sample_rate == 0 {
+        return None;
+    }
+    let total_frames = samples.len() / ch;
+    let window_frames = (min_duration_secs * sample_rate as f64) as usize;
+    if total_frames < window_frames || window_frames == 0 {
+        return None;
+    }
+
+    // Compute per-frame RMS (mix down to mono)
+    let frame_rms: Vec<f32> = (0..total_frames)
+        .map(|f| {
+            let start = f * ch;
+            let sum: f32 = (0..ch)
+                .map(|c| {
+                    let s = samples[start + c];
+                    s * s
+                })
+                .sum();
+            (sum / ch as f32).sqrt()
+        })
+        .collect();
+
+    // Sliding window to find the quietest region
+    let mut best_start = 0usize;
+    let mut best_rms = f64::MAX;
+
+    let mut window_sum: f64 = frame_rms[..window_frames].iter().map(|&v| v as f64).sum();
+    let avg = window_sum / window_frames as f64;
+    if avg < best_rms {
+        best_rms = avg;
+        best_start = 0;
+    }
+
+    for i in 1..=(total_frames - window_frames) {
+        window_sum -= frame_rms[i - 1] as f64;
+        window_sum += frame_rms[i + window_frames - 1] as f64;
+        let avg = window_sum / window_frames as f64;
+        if avg < best_rms {
+            best_rms = avg;
+            best_start = i;
+        }
+    }
+
+    Some(SilenceRegion {
+        start: best_start as f64 / sample_rate as f64,
+        end: (best_start + window_frames) as f64 / sample_rate as f64,
+    })
+}
+
 // ── Utility ─────────────────────────────────────────────────────────────────
 
 fn db_to_linear(db: f32) -> f32 {
     10.0_f32.powf(db / 20.0)
+}
+
+// ── Tests ───────────────────────────────────────────────────────────────────
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn sine_wave(freq: f32, duration_secs: f32, sample_rate: u32) -> Vec<f32> {
+        (0..((duration_secs * sample_rate as f32) as usize))
+            .map(|i| {
+                0.5 * (2.0 * std::f32::consts::PI * freq * i as f32 / sample_rate as f32).sin()
+            })
+            .collect()
+    }
+
+    #[test]
+    fn test_find_quietest_region_finds_quiet_section() {
+        let sample_rate = 44100u32;
+        let mut samples = Vec::new();
+        // 0-1s: loud sine
+        samples.extend(sine_wave(440.0, 1.0, sample_rate));
+        // 1-2s: near silence
+        samples.extend(vec![0.001f32; sample_rate as usize]);
+        // 2-3s: loud sine again
+        samples.extend(sine_wave(440.0, 1.0, sample_rate));
+
+        let region = find_quietest_region(&samples, 1, sample_rate, 0.5);
+        assert!(region.is_some());
+        let r = region.unwrap();
+        assert!(r.start >= 0.5 && r.start <= 1.51, "start was {}", r.start);
+        assert!(r.end >= 1.5 && r.end <= 2.51, "end was {}", r.end);
+    }
+
+    #[test]
+    fn test_find_quietest_region_returns_something_for_all_loud() {
+        let sample_rate = 44100u32;
+        let samples = sine_wave(440.0, 2.0, sample_rate);
+        let region = find_quietest_region(&samples, 1, sample_rate, 0.5);
+        assert!(region.is_some());
+    }
+
+    #[test]
+    fn test_find_quietest_region_none_for_short_audio() {
+        let samples = vec![0.1f32; 100];
+        let region = find_quietest_region(&samples, 1, 44100, 1.0);
+        assert!(region.is_none());
+    }
+
+    #[test]
+    fn test_find_quietest_region_none_for_empty() {
+        let region = find_quietest_region(&[], 1, 44100, 0.5);
+        assert!(region.is_none());
+    }
 }

@@ -45,6 +45,7 @@ pub fn run() {
             commands::apply_compression,
             commands::apply_noise_reduction,
             commands::detect_silence,
+            commands::find_quietest_region,
             commands::trim_silence,
             commands::read_metadata,
             commands::update_metadata,
