@@ -21,6 +21,22 @@ export default defineConfig({
         __dirname,
         "./app/test/__mocks__/@tauri-apps/api.ts",
       ),
+      "@wavesurfer/react": path.resolve(
+        __dirname,
+        "./app/test/__mocks__/wavesurfer.ts",
+      ),
+      "wavesurfer.js/dist/plugins/regions.js": path.resolve(
+        __dirname,
+        "./app/test/__mocks__/wavesurfer-plugins.ts",
+      ),
+      "wavesurfer.js/dist/plugins/minimap.js": path.resolve(
+        __dirname,
+        "./app/test/__mocks__/wavesurfer-plugins.ts",
+      ),
+      "wavesurfer.js/dist/plugins/timeline.js": path.resolve(
+        __dirname,
+        "./app/test/__mocks__/wavesurfer-plugins.ts",
+      ),
     },
   },
   test: {
