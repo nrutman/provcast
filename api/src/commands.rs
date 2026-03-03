@@ -39,12 +39,8 @@ pub struct UpdatedPeaks {
 // ── Audio loading ───────────────────────────────────────────────────────────
 
 #[tauri::command]
-pub fn load_audio(
-    path: String,
-    state: State<'_, AudioEngineState>,
-) -> Result<AudioInfo, String> {
-    let (samples, sample_rate, channels, format) =
-        decode_file(&path).map_err(|e| e.to_string())?;
+pub fn load_audio(path: String, state: State<'_, AudioEngineState>) -> Result<AudioInfo, String> {
+    let (samples, sample_rate, channels, format) = decode_file(&path).map_err(|e| e.to_string())?;
 
     let total_frames = samples.len() / channels as usize;
     let duration = total_frames as f64 / sample_rate as f64;
@@ -81,22 +77,15 @@ pub fn load_audio(
 // ── Playback ────────────────────────────────────────────────────────────────
 
 #[tauri::command]
-pub fn play_audio(
-    from_position: f64,
-    state: State<'_, AudioEngineState>,
-) -> Result<(), String> {
+pub fn play_audio(from_position: f64, state: State<'_, AudioEngineState>) -> Result<(), String> {
     let mut engine = state.0.lock();
 
-    let rendered = engine
-        .rendered_samples()
-        .ok_or("No audio loaded")?;
+    let rendered = engine.rendered_samples().ok_or("No audio loaded")?;
 
     let sr = engine.sample_rate;
     let ch = engine.channels;
 
-    engine
-        .playback
-        .play(&rendered, sr, ch, from_position)
+    engine.playback.play(&rendered, sr, ch, from_position)
 }
 
 #[tauri::command]
@@ -112,15 +101,10 @@ pub fn stop_audio(state: State<'_, AudioEngineState>) -> Result<(), String> {
 }
 
 #[tauri::command]
-pub fn seek_audio(
-    position: f64,
-    state: State<'_, AudioEngineState>,
-) -> Result<(), String> {
+pub fn seek_audio(position: f64, state: State<'_, AudioEngineState>) -> Result<(), String> {
     let mut engine = state.0.lock();
 
-    let rendered = engine
-        .rendered_samples()
-        .ok_or("No audio loaded")?;
+    let rendered = engine.rendered_samples().ok_or("No audio loaded")?;
 
     let sr = engine.sample_rate;
     let ch = engine.channels;
@@ -129,9 +113,7 @@ pub fn seek_audio(
 }
 
 #[tauri::command]
-pub fn get_playback_position(
-    state: State<'_, AudioEngineState>,
-) -> Result<f64, String> {
+pub fn get_playback_position(state: State<'_, AudioEngineState>) -> Result<f64, String> {
     let engine = state.0.lock();
     Ok(engine.playback.get_position())
 }
@@ -162,9 +144,7 @@ pub fn delete_region(
 }
 
 #[tauri::command]
-pub fn undo_edit(
-    state: State<'_, AudioEngineState>,
-) -> Result<UpdatedPeaks, String> {
+pub fn undo_edit(state: State<'_, AudioEngineState>) -> Result<UpdatedPeaks, String> {
     let mut engine = state.0.lock();
     let source = engine
         .source_samples
@@ -183,9 +163,7 @@ pub fn undo_edit(
 }
 
 #[tauri::command]
-pub fn redo_edit(
-    state: State<'_, AudioEngineState>,
-) -> Result<UpdatedPeaks, String> {
+pub fn redo_edit(state: State<'_, AudioEngineState>) -> Result<UpdatedPeaks, String> {
     let mut engine = state.0.lock();
     let source = engine
         .source_samples
@@ -212,15 +190,12 @@ pub fn apply_compression(
 ) -> Result<UpdatedPeaks, String> {
     let mut engine = state.0.lock();
 
-    let rendered = engine
-        .rendered_samples()
-        .ok_or("No audio loaded")?;
+    let rendered = engine.rendered_samples().ok_or("No audio loaded")?;
 
     let sr = engine.sample_rate;
     let ch = engine.channels;
 
-    let processed =
-        processor::compress(&rendered, ch, sr, &params);
+    let processed = processor::compress(&rendered, ch, sr, &params);
 
     let duration = rendered.len() as f64 / (ch as f64 * sr as f64);
 
@@ -232,8 +207,7 @@ pub fn apply_compression(
     });
 
     let source = engine.source_samples.as_ref().unwrap().clone();
-    let (peaks, new_duration) =
-        engine.edl.recompute_peaks(&source, ch, sr);
+    let (peaks, new_duration) = engine.edl.recompute_peaks(&source, ch, sr);
 
     Ok(UpdatedPeaks {
         peaks,
@@ -248,15 +222,12 @@ pub fn apply_noise_reduction(
 ) -> Result<UpdatedPeaks, String> {
     let mut engine = state.0.lock();
 
-    let rendered = engine
-        .rendered_samples()
-        .ok_or("No audio loaded")?;
+    let rendered = engine.rendered_samples().ok_or("No audio loaded")?;
 
     let sr = engine.sample_rate;
     let ch = engine.channels;
 
-    let processed =
-        processor::noise_reduce(&rendered, ch, sr, strength);
+    let processed = processor::noise_reduce(&rendered, ch, sr, strength);
 
     let duration = rendered.len() as f64 / (ch as f64 * sr as f64);
 
@@ -267,8 +238,7 @@ pub fn apply_noise_reduction(
     });
 
     let source = engine.source_samples.as_ref().unwrap().clone();
-    let (peaks, new_duration) =
-        engine.edl.recompute_peaks(&source, ch, sr);
+    let (peaks, new_duration) = engine.edl.recompute_peaks(&source, ch, sr);
 
     Ok(UpdatedPeaks {
         peaks,
@@ -284,9 +254,7 @@ pub fn detect_silence(
 ) -> Result<Vec<SilenceRegion>, String> {
     let engine = state.0.lock();
 
-    let rendered = engine
-        .rendered_samples()
-        .ok_or("No audio loaded")?;
+    let rendered = engine.rendered_samples().ok_or("No audio loaded")?;
 
     let sr = engine.sample_rate;
     let ch = engine.channels;
@@ -322,12 +290,10 @@ pub fn trim_silence(
             let delete_start = region.start + half_keep;
             let delete_end = region.end - half_keep;
             if delete_end > delete_start {
-                engine
-                    .edl
-                    .add_edit(EditOp::Delete {
-                        start: delete_start,
-                        end: delete_end,
-                    });
+                engine.edl.add_edit(EditOp::Delete {
+                    start: delete_start,
+                    end: delete_end,
+                });
             }
         }
     }
@@ -358,11 +324,7 @@ pub fn update_metadata(
     state: State<'_, AudioEngineState>,
 ) -> Result<(), String> {
     let engine = state.0.lock();
-    let path = engine
-        .file_path
-        .as_ref()
-        .ok_or("No file loaded")?
-        .clone();
+    let path = engine.file_path.as_ref().ok_or("No file loaded")?.clone();
 
     id3_util::write_tags(&path, &metadata)
 }
@@ -373,14 +335,9 @@ pub fn set_album_art(
     state: State<'_, AudioEngineState>,
 ) -> Result<ArtInfo, String> {
     let engine = state.0.lock();
-    let path = engine
-        .file_path
-        .as_ref()
-        .ok_or("No file loaded")?
-        .clone();
+    let path = engine.file_path.as_ref().ok_or("No file loaded")?.clone();
 
-    let (art_info, _meta) =
-        id3_util::set_album_art(&path, &image_path)?;
+    let (art_info, _meta) = id3_util::set_album_art(&path, &image_path)?;
 
     Ok(art_info)
 }
@@ -410,9 +367,7 @@ pub fn export_mp3(
     let (rendered, sr, ch, metadata) = {
         let engine = state.0.lock();
 
-        let rendered = engine
-            .rendered_samples()
-            .ok_or("No audio loaded")?;
+        let rendered = engine.rendered_samples().ok_or("No audio loaded")?;
 
         let sr = engine.sample_rate;
         let ch = engine.channels;

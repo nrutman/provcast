@@ -47,10 +47,9 @@ impl AudioEngine {
 
     /// Return the rendered (edited) samples by applying the EDL to the source.
     pub fn rendered_samples(&self) -> Option<Vec<f32>> {
-        self.source_samples.as_ref().map(|src| {
-            self.edl
-                .apply_edits(src, self.channels, self.sample_rate)
-        })
+        self.source_samples
+            .as_ref()
+            .map(|src| self.edl.apply_edits(src, self.channels, self.sample_rate))
     }
 
     /// Duration in seconds of the source audio.
@@ -79,6 +78,12 @@ unsafe impl Send for AudioEngine {}
 
 /// Wrapper used as Tauri managed state.
 pub struct AudioEngineState(pub Mutex<AudioEngine>);
+
+impl Default for AudioEngineState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl AudioEngineState {
     pub fn new() -> Self {

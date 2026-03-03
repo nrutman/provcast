@@ -197,8 +197,7 @@ where
         .map_err(|e| format!("flush: {e:?}"))?;
 
     // Write to disk.
-    let mut file =
-        File::create(output_path).map_err(|e| format!("create output file: {e}"))?;
+    let mut file = File::create(output_path).map_err(|e| format!("create output file: {e}"))?;
     file.write_all(&mp3_data)
         .map_err(|e| format!("write mp3 data: {e}"))?;
 
@@ -227,10 +226,7 @@ where
 
 /// Peak-normalize samples so the loudest peak hits `target_db`.
 fn normalize(samples: &[f32], target_db: f32) -> Vec<f32> {
-    let peak = samples
-        .iter()
-        .map(|s| s.abs())
-        .fold(0.0f32, f32::max);
+    let peak = samples.iter().map(|s| s.abs()).fold(0.0f32, f32::max);
 
     if peak < 1e-10 {
         return samples.to_vec();

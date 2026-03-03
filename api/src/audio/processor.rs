@@ -101,12 +101,7 @@ pub fn compress(
 /// nnnoiseless requires 48 kHz mono input in frames of 480 samples.
 /// We resample if needed, process each channel independently, then
 /// resample back.
-pub fn noise_reduce(
-    samples: &[f32],
-    channels: u16,
-    sample_rate: u32,
-    strength: f32,
-) -> Vec<f32> {
+pub fn noise_reduce(samples: &[f32], channels: u16, sample_rate: u32, strength: f32) -> Vec<f32> {
     let ch = channels as usize;
     if samples.is_empty() || ch == 0 {
         return samples.to_vec();
@@ -117,17 +112,12 @@ pub fn noise_reduce(
     // De-interleave into per-channel vectors.
     let total_frames = samples.len() / ch;
     let mut channel_data: Vec<Vec<f32>> = (0..ch)
-        .map(|c| {
-            (0..total_frames)
-                .map(|f| samples[f * ch + c])
-                .collect()
-        })
+        .map(|c| (0..total_frames).map(|f| samples[f * ch + c]).collect())
         .collect();
 
     // Process each channel independently.
     for ch_samples in &mut channel_data {
-        *ch_samples =
-            denoise_mono_channel(ch_samples, sample_rate, strength);
+        *ch_samples = denoise_mono_channel(ch_samples, sample_rate, strength);
     }
 
     // Re-interleave.
@@ -212,8 +202,8 @@ fn resample_mono(input: &[f32], from_sr: u32, to_sr: u32) -> Vec<f32> {
         from_sr as usize,
         to_sr as usize,
         chunk_size,
-        2,  // sub-chunks
-        1,  // 1 channel
+        2, // sub-chunks
+        1, // 1 channel
     )
     .expect("Failed to create resampler");
 
@@ -243,8 +233,7 @@ fn resample_mono(input: &[f32], from_sr: u32, to_sr: u32) -> Vec<f32> {
     }
 
     // Trim to the expected length.
-    let expected_len =
-        (input.len() as f64 * to_sr as f64 / from_sr as f64).round() as usize;
+    let expected_len = (input.len() as f64 * to_sr as f64 / from_sr as f64).round() as usize;
     output.truncate(expected_len);
 
     output

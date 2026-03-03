@@ -77,17 +77,12 @@ impl PlaybackState {
         self.stop_internal();
         self.ensure_stream()?;
 
-        let handle = self
-            .stream_handle
-            .as_ref()
-            .ok_or("No output stream")?;
+        let handle = self.stream_handle.as_ref().ok_or("No output stream")?;
 
-        let sink = Sink::try_new(handle)
-            .map_err(|e| format!("Failed to create sink: {e}"))?;
+        let sink = Sink::try_new(handle).map_err(|e| format!("Failed to create sink: {e}"))?;
 
         // Compute the sample offset.
-        let frame_offset =
-            (from_position * sample_rate as f64) as usize * channels as usize;
+        let frame_offset = (from_position * sample_rate as f64) as usize * channels as usize;
         let frame_offset = frame_offset.min(samples.len());
 
         let slice = &samples[frame_offset..];

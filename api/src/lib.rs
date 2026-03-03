@@ -6,6 +6,7 @@ use audio::AudioEngineState;
 use tauri::{Emitter, Manager};
 
 #[cfg(target_os = "macos")]
+#[allow(deprecated)]
 fn set_macos_dock_icon() {
     use cocoa::appkit::{NSApp, NSApplication, NSImage};
     use cocoa::base::nil;

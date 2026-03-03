@@ -17,7 +17,7 @@ pub enum EditOp {
 }
 
 /// Non-destructive edit decision list with undo / redo.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct EditDecisionList {
     /// The committed stack of operations (applied in order).
     operations: Vec<EditOp>,
@@ -141,18 +141,11 @@ fn time_to_sample(time: f64, sample_rate: u32, channels: usize) -> usize {
     frame * channels
 }
 
-fn apply_single_op(
-    samples: &[f32],
-    op: &EditOp,
-    channels: usize,
-    sample_rate: u32,
-) -> Vec<f32> {
+fn apply_single_op(samples: &[f32], op: &EditOp, channels: usize, sample_rate: u32) -> Vec<f32> {
     match op {
         EditOp::Delete { start, end } => {
-            let start_idx = time_to_sample(*start, sample_rate, channels)
-                .min(samples.len());
-            let end_idx = time_to_sample(*end, sample_rate, channels)
-                .min(samples.len());
+            let start_idx = time_to_sample(*start, sample_rate, channels).min(samples.len());
+            let end_idx = time_to_sample(*end, sample_rate, channels).min(samples.len());
 
             let mut out = Vec::with_capacity(samples.len() - (end_idx - start_idx));
             out.extend_from_slice(&samples[..start_idx]);
@@ -161,10 +154,8 @@ fn apply_single_op(
         }
 
         EditOp::Silence { start, end } => {
-            let start_idx = time_to_sample(*start, sample_rate, channels)
-                .min(samples.len());
-            let end_idx = time_to_sample(*end, sample_rate, channels)
-                .min(samples.len());
+            let start_idx = time_to_sample(*start, sample_rate, channels).min(samples.len());
+            let end_idx = time_to_sample(*end, sample_rate, channels).min(samples.len());
 
             let mut out = samples.to_vec();
             for s in &mut out[start_idx..end_idx] {
@@ -178,14 +169,11 @@ fn apply_single_op(
             start,
             end,
         } => {
-            let start_idx = time_to_sample(*start, sample_rate, channels)
-                .min(samples.len());
-            let end_idx = time_to_sample(*end, sample_rate, channels)
-                .min(samples.len());
+            let start_idx = time_to_sample(*start, sample_rate, channels).min(samples.len());
+            let end_idx = time_to_sample(*end, sample_rate, channels).min(samples.len());
 
-            let mut out = Vec::with_capacity(
-                samples.len() - (end_idx - start_idx) + new_samples.len(),
-            );
+            let mut out =
+                Vec::with_capacity(samples.len() - (end_idx - start_idx) + new_samples.len());
             out.extend_from_slice(&samples[..start_idx]);
             out.extend_from_slice(new_samples);
             out.extend_from_slice(&samples[end_idx..]);

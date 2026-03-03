@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 export interface SliderProps extends Omit<
   React.InputHTMLAttributes<HTMLInputElement>,
-  "type" | "value" | "onChange"
+  "type" | "value" | "defaultValue" | "onChange"
 > {
   value?: number[];
   defaultValue?: number[];

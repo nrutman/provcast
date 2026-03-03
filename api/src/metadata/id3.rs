@@ -48,10 +48,7 @@ pub fn read_tags(path: &str) -> Result<Metadata, String> {
         album: tag.album().map(|s| s.to_string()),
         year: tag.year(),
         genre: tag.genre_parsed().map(|s| s.to_string()),
-        comment: tag
-            .comments()
-            .next()
-            .map(|c| c.text.clone()),
+        comment: tag.comments().next().map(|c| c.text.clone()),
         track_number: tag.track(),
         ..Default::default()
     };
@@ -111,8 +108,7 @@ pub fn write_tags(path: &str, metadata: &Metadata) -> Result<(), String> {
 /// Set album art on the current project's metadata from an image file path.
 /// Returns info about the art that was set.
 pub fn set_album_art(path: &str, image_path: &str) -> Result<(ArtInfo, Metadata), String> {
-    let image_data =
-        fs::read(image_path).map_err(|e| format!("Failed to read image: {e}"))?;
+    let image_data = fs::read(image_path).map_err(|e| format!("Failed to read image: {e}"))?;
 
     let mime = guess_image_mime(image_path);
     let size_bytes = image_data.len() as u64;
@@ -163,10 +159,9 @@ fn guess_image_mime(path: &str) -> String {
 
 /// Simple base64 encoding (no external crate dependency).
 fn base64_encode(data: &[u8]) -> String {
-    const CHARS: &[u8; 64] =
-        b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    const CHARS: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-    let mut result = String::with_capacity((data.len() + 2) / 3 * 4);
+    let mut result = String::with_capacity(data.len().div_ceil(3) * 4);
     let chunks = data.chunks(3);
 
     for chunk in chunks {

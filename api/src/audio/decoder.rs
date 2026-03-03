@@ -67,9 +67,7 @@ pub fn decode_file(path: &str) -> Result<(Vec<f32>, u32, u16, String), DecoderEr
     let track = format_reader
         .tracks()
         .iter()
-        .find(|t| {
-            t.codec_params.codec != symphonia::core::codecs::CODEC_TYPE_NULL
-        })
+        .find(|t| t.codec_params.codec != symphonia::core::codecs::CODEC_TYPE_NULL)
         .ok_or(DecoderError::NoAudioTrack)?;
 
     let track_id = track.id;
@@ -121,10 +119,7 @@ pub fn decode_file(path: &str) -> Result<(Vec<f32>, u32, u16, String), DecoderEr
         let spec = *decoded.spec();
         let num_frames = decoded.frames();
 
-        let mut sample_buf = SampleBuffer::<f32>::new(
-            num_frames as u64,
-            spec,
-        );
+        let mut sample_buf = SampleBuffer::<f32>::new(num_frames as u64, spec);
         sample_buf.copy_interleaved_ref(decoded);
 
         all_samples.extend_from_slice(sample_buf.samples());
