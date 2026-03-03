@@ -37,6 +37,26 @@ interface SizeEstimate {
   max_bytes: number;
 }
 
+interface EffectPreviewParams {
+  effectType: string;
+  thresholdDb?: number;
+  ratio?: number;
+  attackMs?: number;
+  releaseMs?: number;
+  makeupGainDb?: number;
+  strength?: number;
+}
+
+interface ExportPreviewParams {
+  bitrate: number;
+  cbr: boolean;
+  vbrQuality?: number;
+  sampleRateOut: number;
+  mono: boolean;
+  start: number;
+  end: number;
+}
+
 function applyUpdatedPeaks(result: UpdatedPeaks) {
   const store = useAudioStore.getState();
   store.updatePeaks(result.peaks);
@@ -75,8 +95,8 @@ export async function loadAudio(path: string): Promise<AudioInfo> {
   return invoke<AudioInfo>("load_audio", { path });
 }
 
-export async function playAudio(fromPosition: number): Promise<void> {
-  return invoke("play_audio", { fromPosition });
+export async function playAudio(fromPosition: number, usePreview?: boolean): Promise<void> {
+  return invoke("play_audio", { fromPosition, usePreview: usePreview ?? false });
 }
 
 export async function pauseAudio(): Promise<void> {
@@ -153,4 +173,27 @@ export async function exportMp3(
   return invoke("export_mp3", { params, outputPath });
 }
 
-export type { CompressionParams, ExportParams, SilenceRegion, SizeEstimate };
+export async function findQuietestRegion(minDurationSecs: number): Promise<SilenceRegion | null> {
+  return invoke("find_quietest_region", { minDurationSecs });
+}
+
+export async function previewEffect(params: EffectPreviewParams): Promise<void> {
+  return invoke("preview_effect", { params });
+}
+
+export async function stopPreview(): Promise<void> {
+  return invoke("stop_preview");
+}
+
+export async function previewExport(params: ExportPreviewParams): Promise<string> {
+  return invoke("preview_export", { params });
+}
+
+export type {
+  CompressionParams,
+  EffectPreviewParams,
+  ExportParams,
+  ExportPreviewParams,
+  SilenceRegion,
+  SizeEstimate,
+};
