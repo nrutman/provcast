@@ -22,9 +22,7 @@ describe("NormalizationStep", () => {
   it("shows A/B toggle buttons for compression", () => {
     render(<NormalizationStep />);
     const buttons = screen.getAllByRole("button");
-    const originalButtons = buttons.filter((b) =>
-      b.textContent?.includes("Original"),
-    );
+    const originalButtons = buttons.filter((b) => b.textContent?.includes("Original"));
     expect(originalButtons.length).toBeGreaterThan(0);
   });
 

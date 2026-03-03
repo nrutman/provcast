@@ -35,7 +35,7 @@ export function MetadataStep() {
       ],
     });
     if (path) {
-      const info = await setAlbumArt(path);
+      await setAlbumArt(path);
       setForm((prev) => ({ ...prev, albumArt: path }));
       setMetadata({ albumArt: path });
     }
@@ -80,20 +80,12 @@ export function MetadataStep() {
               )}
             </div>
             <div className="flex flex-col gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleChooseImage}
-              >
+              <Button variant="outline" size="sm" onClick={handleChooseImage}>
                 <Upload className="mr-2 h-4 w-4" />
                 Choose Image
               </Button>
               {form.albumArt && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleRemoveArt}
-                >
+                <Button variant="ghost" size="sm" onClick={handleRemoveArt}>
                   <Trash2 className="mr-2 h-4 w-4" />
                   Remove
                 </Button>

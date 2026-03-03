@@ -201,9 +201,7 @@ export function ExportStep() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label>Bitrate</Label>
-                <span className="text-sm text-muted-foreground">
-                  {bitrate} kbps
-                </span>
+                <span className="text-sm text-muted-foreground">{bitrate} kbps</span>
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {CBR_BITRATES.map((b) => (
@@ -226,9 +224,7 @@ export function ExportStep() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label>VBR Quality</Label>
-                <span className="text-sm text-muted-foreground">
-                  {vbrQuality}
-                </span>
+                <span className="text-sm text-muted-foreground">{vbrQuality}</span>
               </div>
               <Slider
                 min={0}

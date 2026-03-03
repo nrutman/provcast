@@ -1,11 +1,5 @@
 import { type WizardStep } from "@/stores/ui-store";
-import {
-  FileAudio,
-  SlidersHorizontal,
-  Scissors,
-  Tag,
-  Download,
-} from "lucide-react";
+import { FileAudio, SlidersHorizontal, Scissors, Tag, Download } from "lucide-react";
 
 const steps: { step: WizardStep; label: string; icon: typeof FileAudio }[] = [
   { step: 1, label: "File", icon: FileAudio },

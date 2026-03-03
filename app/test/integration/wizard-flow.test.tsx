@@ -64,9 +64,7 @@ describe("Wizard Flow Integration", () => {
 
   describe("Step sidebar rendering", () => {
     it("renders sidebar and allows step switching", async () => {
-      const { StepSidebar } = await import(
-        "@/components/wizard/step-sidebar"
-      );
+      const { StepSidebar } = await import("@/components/wizard/step-sidebar");
       const user = userEvent.setup();
       const onStepClick = vi.fn();
 
@@ -89,53 +87,37 @@ describe("Wizard Flow Integration", () => {
 
   describe("Step components render", () => {
     it("FileSelectStep renders drop zone", async () => {
-      const { FileSelectStep } = await import(
-        "@/components/steps/file-select-step"
-      );
+      const { FileSelectStep } = await import("@/components/steps/file-select-step");
       render(<FileSelectStep />);
       expect(screen.getByText(/drop an audio file/i)).toBeInTheDocument();
     });
 
     it("NormalizationStep renders both sections", async () => {
-      const { NormalizationStep } = await import(
-        "@/components/steps/normalization-step"
-      );
+      const { NormalizationStep } = await import("@/components/steps/normalization-step");
       render(<NormalizationStep />);
       expect(screen.getByText("Compression")).toBeInTheDocument();
       expect(screen.getByText("Noise Reduction")).toBeInTheDocument();
     });
 
     it("TrimmingStep renders all sections", async () => {
-      const { TrimmingStep } = await import(
-        "@/components/steps/trimming-step"
-      );
+      const { TrimmingStep } = await import("@/components/steps/trimming-step");
       render(<TrimmingStep />);
-      expect(
-        screen.getByRole("button", { name: /delete selection/i }),
-      ).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /delete selection/i })).toBeInTheDocument();
       expect(screen.getByText(/silence detection/i)).toBeInTheDocument();
     });
 
     it("MetadataStep renders fields", async () => {
-      const { MetadataStep } = await import(
-        "@/components/steps/metadata-step"
-      );
+      const { MetadataStep } = await import("@/components/steps/metadata-step");
       render(<MetadataStep />);
       expect(screen.getByLabelText(/title/i)).toBeInTheDocument();
       expect(screen.getByText(/album art/i)).toBeInTheDocument();
     });
 
     it("ExportStep renders controls", async () => {
-      const { ExportStep } = await import(
-        "@/components/steps/export-step"
-      );
+      const { ExportStep } = await import("@/components/steps/export-step");
       render(<ExportStep />);
-      expect(
-        screen.getByRole("button", { name: /cbr/i }),
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole("button", { name: /^export$/i }),
-      ).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /cbr/i })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /^export$/i })).toBeInTheDocument();
     });
   });
 
@@ -152,9 +134,7 @@ describe("Wizard Flow Integration", () => {
       useUIStore.getState().setFileLoaded(true);
       useUIStore.getState().setCurrentStep(3);
       useAudioStore.getState().setCompressionApplied(true);
-      useAudioStore.getState().setDetectedSilenceRegions([
-        { start: 1, end: 2 },
-      ]);
+      useAudioStore.getState().setDetectedSilenceRegions([{ start: 1, end: 2 }]);
 
       // Clear
       useAudioStore.getState().clearFile();

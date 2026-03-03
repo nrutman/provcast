@@ -9,11 +9,7 @@ import { useUIStore } from "@/stores/ui-store";
 import { seekAudio } from "@/hooks/use-tauri-audio";
 
 function getRegionsPlugin(ws: WaveSurfer): RegionsPlugin | null {
-  return (
-    ws
-      .getActivePlugins()
-      .find((p): p is RegionsPlugin => p instanceof RegionsPlugin) ?? null
-  );
+  return ws.getActivePlugins().find((p): p is RegionsPlugin => p instanceof RegionsPlugin) ?? null;
 }
 
 export function WaveformEditor() {
@@ -22,9 +18,7 @@ export function WaveformEditor() {
   const playbackPosition = useAudioStore((s) => s.playbackPosition);
   const setSelectedRegion = useAudioStore((s) => s.setSelectedRegion);
   const deletedRegions = useAudioStore((s) => s.deletedRegions);
-  const detectedSilenceRegions = useAudioStore(
-    (s) => s.detectedSilenceRegions,
-  );
+  const detectedSilenceRegions = useAudioStore((s) => s.detectedSilenceRegions);
   const zoom = useUIStore((s) => s.zoom);
   const currentStep = useUIStore((s) => s.currentStep);
 
@@ -89,21 +83,14 @@ export function WaveformEditor() {
     const unsub = regions.on("region-created", (region) => {
       if (isCreating) return;
       // Don't interfere with overlay regions
-      if (
-        region.id.startsWith("deleted-") ||
-        region.id.startsWith("context-")
-      ) {
+      if (region.id.startsWith("deleted-") || region.id.startsWith("context-")) {
         return;
       }
       isCreating = true;
 
       // Remove previous selection regions only (not overlays)
       regions.getRegions().forEach((r) => {
-        if (
-          r.id !== region.id &&
-          !r.id.startsWith("deleted-") &&
-          !r.id.startsWith("context-")
-        ) {
+        if (r.id !== region.id && !r.id.startsWith("deleted-") && !r.id.startsWith("context-")) {
           r.remove();
         }
       });
@@ -114,10 +101,7 @@ export function WaveformEditor() {
 
     const unsubUpdate = regions.on("region-updated", (region) => {
       // Only update selection for user-created regions
-      if (
-        region.id.startsWith("deleted-") ||
-        region.id.startsWith("context-")
-      ) {
+      if (region.id.startsWith("deleted-") || region.id.startsWith("context-")) {
         return;
       }
       setSelectedRegion({ start: region.start, end: region.end });
@@ -199,10 +183,7 @@ export function WaveformEditor() {
 
   return (
     <div className="flex-1 overflow-hidden p-4">
-      <div
-        ref={containerRef}
-        className="rounded-md border border-border bg-background"
-      />
+      <div ref={containerRef} className="rounded-md border border-border bg-background" />
     </div>
   );
 }

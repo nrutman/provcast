@@ -58,9 +58,7 @@ function DropZone() {
             <Upload className="h-10 w-10 text-muted-foreground" />
           </div>
           <div className="text-center">
-            <p className="text-lg font-medium">
-              Drop an audio file here or click to browse
-            </p>
+            <p className="text-lg font-medium">Drop an audio file here or click to browse</p>
             <p className="mt-2 text-sm text-muted-foreground">
               Supports: MP3, WAV, FLAC, OGG, AIFF
             </p>
@@ -93,9 +91,7 @@ function FileInfo({ filePath, audioInfo }: { filePath: string; audioInfo: AudioI
                 {formatDuration(audioInfo.duration)}
               </span>
               <span>Format</span>
-              <span className="font-medium text-foreground">
-                {audioInfo.format.toUpperCase()}
-              </span>
+              <span className="font-medium text-foreground">{audioInfo.format.toUpperCase()}</span>
               <span>Sample Rate</span>
               <span className="font-medium text-foreground">
                 {formatSampleRate(audioInfo.sampleRate)}

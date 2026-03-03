@@ -106,15 +106,7 @@ function CompressionSection() {
     } finally {
       setApplying(false);
     }
-  }, [
-    threshold,
-    ratio,
-    attack,
-    release,
-    makeupGain,
-    setCompressionApplied,
-    setPreviewMode,
-  ]);
+  }, [threshold, ratio, attack, release, makeupGain, setCompressionApplied, setPreviewMode]);
 
   return (
     <Card>
@@ -138,9 +130,7 @@ function CompressionSection() {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label>Threshold</Label>
-              <span className="text-sm text-muted-foreground">
-                {threshold} dB
-              </span>
+              <span className="text-sm text-muted-foreground">{threshold} dB</span>
             </div>
             <Slider
               min={-60}
@@ -168,9 +158,7 @@ function CompressionSection() {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label>Attack</Label>
-              <span className="text-sm text-muted-foreground">
-                {attack} ms
-              </span>
+              <span className="text-sm text-muted-foreground">{attack} ms</span>
             </div>
             <Slider
               min={0.1}
@@ -184,9 +172,7 @@ function CompressionSection() {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label>Release</Label>
-              <span className="text-sm text-muted-foreground">
-                {release} ms
-              </span>
+              <span className="text-sm text-muted-foreground">{release} ms</span>
             </div>
             <Slider
               min={10}
@@ -200,9 +186,7 @@ function CompressionSection() {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label>Makeup Gain</Label>
-              <span className="text-sm text-muted-foreground">
-                {makeupGain} dB
-              </span>
+              <span className="text-sm text-muted-foreground">{makeupGain} dB</span>
             </div>
             <Slider
               min={0}
@@ -238,16 +222,10 @@ function NoiseReductionSection() {
   const [detecting, setDetecting] = useState(false);
 
   const previewMode = useAudioStore((s) => s.previewMode);
-  const noiseReductionApplied = useAudioStore(
-    (s) => s.noiseReductionApplied,
-  );
+  const noiseReductionApplied = useAudioStore((s) => s.noiseReductionApplied);
   const setPreviewMode = useAudioStore((s) => s.setPreviewMode);
-  const setNoiseReductionApplied = useAudioStore(
-    (s) => s.setNoiseReductionApplied,
-  );
-  const setDetectedSilenceRegions = useAudioStore(
-    (s) => s.setDetectedSilenceRegions,
-  );
+  const setNoiseReductionApplied = useAudioStore((s) => s.setNoiseReductionApplied);
+  const setDetectedSilenceRegions = useAudioStore((s) => s.setDetectedSilenceRegions);
   const currentStep = useUIStore((s) => s.currentStep);
 
   useEffect(() => {
@@ -336,8 +314,7 @@ function NoiseReductionSection() {
               <p className="text-sm">
                 A quiet section was found at{" "}
                 <span className="font-medium">
-                  {formatTime(quietRegion.start)}-
-                  {formatTime(quietRegion.end)}
+                  {formatTime(quietRegion.start)}-{formatTime(quietRegion.end)}
                 </span>
               </p>
               {!regionAccepted ? (
@@ -358,8 +335,7 @@ function NoiseReductionSection() {
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">
-              No quiet region detected. You can select a region manually on the
-              waveform.
+              No quiet region detected. You can select a region manually on the waveform.
             </p>
           )}
         </div>
@@ -368,9 +344,7 @@ function NoiseReductionSection() {
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label>Strength</Label>
-            <span className="text-sm text-muted-foreground">
-              {strength.toFixed(2)}
-            </span>
+            <span className="text-sm text-muted-foreground">{strength.toFixed(2)}</span>
           </div>
           <Slider
             min={0}
@@ -414,8 +388,8 @@ export function NormalizationStep() {
       <div>
         <h2 className="text-lg font-semibold">Audio Normalization</h2>
         <p className="text-sm text-muted-foreground">
-          Apply compression and noise reduction to improve your audio quality.
-          Use the A/B toggle to compare before and after.
+          Apply compression and noise reduction to improve your audio quality. Use the A/B toggle to
+          compare before and after.
         </p>
       </div>
 

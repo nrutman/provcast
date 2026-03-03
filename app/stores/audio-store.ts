@@ -142,19 +142,16 @@ export const useAudioStore = create<AudioState>()(
 
       setPreviewMode: (mode) => set({ previewMode: mode }),
 
-      setDetectedSilenceRegions: (regions) =>
-        set({ detectedSilenceRegions: regions }),
+      setDetectedSilenceRegions: (regions) => set({ detectedSilenceRegions: regions }),
 
       addDeletedRegion: (region) =>
         set((state) => ({
           deletedRegions: [...state.deletedRegions, region],
         })),
 
-      setCompressionApplied: (applied) =>
-        set({ compressionApplied: applied }),
+      setCompressionApplied: (applied) => set({ compressionApplied: applied }),
 
-      setNoiseReductionApplied: (applied) =>
-        set({ noiseReductionApplied: applied }),
+      setNoiseReductionApplied: (applied) => set({ noiseReductionApplied: applied }),
     }),
     {
       limit: 100,

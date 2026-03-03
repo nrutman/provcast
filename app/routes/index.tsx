@@ -15,7 +15,7 @@ export const Route = createFileRoute("/")({
   component: EditorView,
 });
 
-const stepComponents: Record<WizardStep, () => JSX.Element> = {
+const stepComponents: Record<WizardStep, () => React.JSX.Element> = {
   1: FileSelectStep,
   2: NormalizationStep,
   3: TrimmingStep,

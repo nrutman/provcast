@@ -5,20 +5,14 @@ import { TrimmingStep } from "../trimming-step";
 describe("TrimmingStep", () => {
   it("renders delete and play selection buttons", () => {
     render(<TrimmingStep />);
-    expect(
-      screen.getByRole("button", { name: /delete selection/i }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /play selection/i }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /delete selection/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /play selection/i })).toBeInTheDocument();
   });
 
   it("renders silence detection section", () => {
     render(<TrimmingStep />);
     expect(screen.getByText(/silence detection/i)).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /detect silence/i }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /detect silence/i })).toBeInTheDocument();
   });
 
   it("renders undo and redo buttons", () => {
@@ -35,8 +29,6 @@ describe("TrimmingStep", () => {
 
   it("disables delete selection when no region selected", () => {
     render(<TrimmingStep />);
-    expect(
-      screen.getByRole("button", { name: /delete selection/i }),
-    ).toBeDisabled();
+    expect(screen.getByRole("button", { name: /delete selection/i })).toBeDisabled();
   });
 });

@@ -69,8 +69,7 @@ function ManualTrimSection() {
         </div>
         {selectedRegion && (
           <Badge variant="outline">
-            {formatTime(selectedRegion.start)} -{" "}
-            {formatTime(selectedRegion.end)}
+            {formatTime(selectedRegion.start)} - {formatTime(selectedRegion.end)}
           </Badge>
         )}
       </CardHeader>
@@ -114,9 +113,7 @@ function SilenceDetectionSection() {
   const [detecting, setDetecting] = useState(false);
   const [trimming, setTrimming] = useState(false);
 
-  const setDetectedSilenceRegions = useAudioStore(
-    (s) => s.setDetectedSilenceRegions,
-  );
+  const setDetectedSilenceRegions = useAudioStore((s) => s.setDetectedSilenceRegions);
 
   const handleDetect = useCallback(async () => {
     setDetecting(true);
@@ -135,16 +132,12 @@ function SilenceDetectionSection() {
 
   const handleToggleRegion = useCallback((index: number) => {
     setCheckedRegions((prev) =>
-      prev.map((item, i) =>
-        i === index ? { ...item, checked: !item.checked } : item,
-      ),
+      prev.map((item, i) => (i === index ? { ...item, checked: !item.checked } : item)),
     );
   }, []);
 
   const handleTrimSelected = useCallback(async () => {
-    const selected = checkedRegions
-      .filter((item) => item.checked)
-      .map((item) => item.region);
+    const selected = checkedRegions.filter((item) => item.checked).map((item) => item.region);
     if (selected.length === 0) return;
     setTrimming(true);
     try {
@@ -185,9 +178,7 @@ function SilenceDetectionSection() {
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label>Threshold</Label>
-            <span className="text-sm text-muted-foreground">
-              {threshold} dB
-            </span>
+            <span className="text-sm text-muted-foreground">{threshold} dB</span>
           </div>
           <Slider
             min={-60}
@@ -202,9 +193,7 @@ function SilenceDetectionSection() {
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label>Min Duration</Label>
-            <span className="text-sm text-muted-foreground">
-              {minDuration.toFixed(1)}s
-            </span>
+            <span className="text-sm text-muted-foreground">{minDuration.toFixed(1)}s</span>
           </div>
           <Slider
             min={0.1}
@@ -230,8 +219,7 @@ function SilenceDetectionSection() {
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
               Found {checkedRegions.length} silent region
-              {checkedRegions.length !== 1 && "s"} (
-              {totalSilenceDuration.toFixed(1)}s total)
+              {checkedRegions.length !== 1 && "s"} ({totalSilenceDuration.toFixed(1)}s total)
             </p>
 
             <ScrollArea className="max-h-48">
@@ -250,12 +238,9 @@ function SilenceDetectionSection() {
                         className="h-4 w-4 rounded border-muted-foreground/50"
                       />
                       <span className="font-mono">
-                        {formatTime(item.region.start)} -{" "}
-                        {formatTime(item.region.end)}
+                        {formatTime(item.region.start)} - {formatTime(item.region.end)}
                       </span>
-                      <span className="text-muted-foreground">
-                        ({duration.toFixed(1)}s)
-                      </span>
+                      <span className="text-muted-foreground">({duration.toFixed(1)}s)</span>
                     </label>
                   );
                 })}
@@ -275,11 +260,7 @@ function SilenceDetectionSection() {
                 )}
                 Trim Selected
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleClearAll}
-              >
+              <Button variant="outline" size="sm" onClick={handleClearAll}>
                 <XCircle className="mr-2 h-4 w-4" />
                 Clear All
               </Button>
@@ -329,21 +310,11 @@ function EditHistorySection() {
       <CardContent className="space-y-4">
         {/* Undo/Redo buttons */}
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={undoCount === 0}
-            onClick={handleUndo}
-          >
+          <Button variant="outline" size="sm" disabled={undoCount === 0} onClick={handleUndo}>
             <Undo2 className="mr-2 h-4 w-4" />
             Undo
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={redoCount === 0}
-            onClick={handleRedo}
-          >
+          <Button variant="outline" size="sm" disabled={redoCount === 0} onClick={handleRedo}>
             <Redo2 className="mr-2 h-4 w-4" />
             Redo
           </Button>
@@ -382,8 +353,8 @@ export function TrimmingStep() {
       <div>
         <h2 className="text-lg font-semibold">Trim & Edit</h2>
         <p className="text-sm text-muted-foreground">
-          Remove unwanted sections from your audio. Select regions on the
-          waveform or detect and trim silent passages automatically.
+          Remove unwanted sections from your audio. Select regions on the waveform or detect and
+          trim silent passages automatically.
         </p>
       </div>
 
